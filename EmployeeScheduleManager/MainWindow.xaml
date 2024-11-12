@@ -5,8 +5,80 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:EmployeeScheduleManager"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="460" Width="1000">
     <Grid>
+        <!-- TabControl to hold tabs -->
+        <TabControl>
+            <!-- First Tab: Main Section (e.g., Dashboard) -->
+            <TabItem Header="Dashboard">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="47*"/>
+                        <ColumnDefinition Width="8*"/>
+                        <ColumnDefinition Width="342*"/>
+                    </Grid.ColumnDefinitions>
+                    <!-- Your main dashboard content here -->
+                    <TextBlock Text="Welcome to the Dashboard" HorizontalAlignment="Left" VerticalAlignment="Center" Grid.Column="2" Margin="214,0,0,0"/>
+                </Grid>
+            </TabItem>
 
+            <!-- New Tab: Pracownicy -->
+            <TabItem Header="Pracownicy">
+                <Grid>
+                    <!-- Employee management UI elements go here -->
+                    <StackPanel Margin="10">
+                        <TextBlock Text="Zarządzaj Pracownikami" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
+
+                        <!-- List of employees -->
+
+                        <DataGrid x:Name="EmployeeListDataGrid" IsReadOnly="True" AutoGenerateColumns="False" Height="300">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Id" Width="85" Binding="{Binding Id}"/>
+                                <DataGridTextColumn Header="Imie" Width="100" Binding="{Binding imie}"/>
+                                <DataGridTextColumn Header="Nazwisko" Width="100" Binding="{Binding nazwisko}"/>
+                                <DataGridTextColumn Header="Lokalizacja" Width="100" Binding="{Binding lokalizacja}"/>
+                                <DataGridTemplateColumn Header="Niedostępność" Width="*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel>
+                                                <TextBlock>
+                                                <Run Text="Poniedziałek: " />
+                                                <Run Text="{Binding niedostepnosc[Poniedzialek]}" />
+                                                <Run Text="     Wtorek: " />
+                                                <Run Text="{Binding niedostepnosc[Wtorek]}" />
+                                                <Run Text="     Środa: " />
+                                                <Run Text="{Binding niedostepnosc[Sroda]}" />
+                                                <Run Text="     Czwartek: " />
+                                                <Run Text="{Binding niedostepnosc[Czwartek]}" />
+                                                </TextBlock>
+                                                <TextBlock>
+                                                <Run Text="Piątek: " />
+                                                <Run Text="{Binding niedostepnosc[Piatek]}" />
+                                                <Run Text="     Sobota: " />
+                                                <Run Text="{Binding niedostepnosc[Sobota]}" />
+                                                <Run Text="     Niedziela: " />
+                                                <Run Text="{Binding niedostepnosc[Niedziela]}" />        
+                                                </TextBlock>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <!-- Buttons for adding, editing, and removing employees -->
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,10,10">
+                            <Button x:Name="RefreshEmployeeListButton" Content="Odśwież liste" Width="100" Margin="5,5,510,5" Click="RefreshEmployeeList_Click"/>
+                            <Button x:Name="AddEmployeeButton" Content="Dodaj Pracownika" Width="100" Margin="5" Click="AddEmployeeButton_Click"/>
+                            <Button Content="Edytuj Pracownika" Width="100" Margin="5"/>
+                            <Button Content="Usuń Pracownika" Width="100" Margin="5"/>
+                        </StackPanel>
+
+                    </StackPanel>
+                </Grid>
+            </TabItem>
+
+            <!-- Additional tabs can go here -->
+        </TabControl>
     </Grid>
 </Window>

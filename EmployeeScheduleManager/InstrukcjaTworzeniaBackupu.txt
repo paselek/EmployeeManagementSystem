@@ -1,0 +1,8 @@
+Z BAZY DO PLIKU BACKUP.JSON
+npx -p node-firestore-import-export firestore-export -a firebase-config.json -b backup.json
+
+
+
+
+WYPCHNIECIE Z PLIKU BACKUP.JSON DO BAZY
+npx -p node-firestore-import-export firestore-import -a firebase-config.json -b backup.json
