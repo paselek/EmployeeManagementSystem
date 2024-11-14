@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EmployeeScheduleManager.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -24,8 +25,18 @@ namespace EmployeeScheduleManager
 		public AddEmployeeWindow()
 		{
 			InitializeComponent();
+			// Załaduj lokalizacje po załadowaniu okna
+			LoadLocations();
 		}
+		private async void LoadLocations()
+		{
+			FirestoreTest firestoreTest = new FirestoreTest();
+			var locations = await firestoreTest.GetLocationsAsync(); // Zakładając, że masz metodę do pobrania lokalizacji
 
+			// Przypisz lokalizacje do ComboBox
+			LocationComboBox.ItemsSource = locations;
+			LocationComboBox.DisplayMemberPath = "nazwa"; // Załóżmy, że lokalizacja ma właściwość 'Name'
+		}
 		private async void SaveButton_Click(object sender, RoutedEventArgs e)
 		{
 			string firstName = ImieTextBox.Text;
@@ -42,12 +53,20 @@ namespace EmployeeScheduleManager
 				{ "Sobota", SobotaStartTextBox.Text + "-" + SobotaEndTextBox.Text },
 				{ "Niedziela", NiedzielaStartTextBox.Text + "-" + NiedzielaEndTextBox.Text }
 			};
-
+			var selectedLocation = LocationComboBox.SelectedItem as Location;
+			// Sprawdzenie, czy wybrany element istnieje
+			string locationId = "";
+			if (selectedLocation != null)
+			{
+				locationId = selectedLocation.Id;  // Pobranie Id wybranej lokalizacji
+													
+			}
 			if (IsValidInput(firstName, lastName, unavailability))
 			{
 				FirestoreTest firestoreTest = new FirestoreTest();
-				await firestoreTest.AddEmployee(firstName, lastName, unavailability);
+				await firestoreTest.AddEmployee(firstName, lastName, locationId, unavailability);
 				MessageBox.Show("Employee added successfully!");
+				this.DialogResult = true;
 				this.Close();
 			}
 			else
