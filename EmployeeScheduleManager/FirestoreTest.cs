@@ -27,18 +27,9 @@ namespace EmployeeScheduleManager
 
 		public async Task<List<Employee>> GetEmployeesAsync()
 		{
-			var employees = new List<Employee>();
-
-			// Pobieranie dokumentów z kolekcji 'Pracownicy'
-			var snapshot = await _firestoreDb.Collection("Pracownicy").GetSnapshotAsync();
-
-			foreach (var document in snapshot.Documents)
-			{
-				Employee employee = document.ConvertTo<Employee>();
-				employees.Add(employee);
-			}
-
-			return employees;
+			var employeeCollection = _firestoreDb.Collection("Pracownicy");
+			var snapshot = await employeeCollection.GetSnapshotAsync();
+			return snapshot.Documents.Select(doc => doc.ConvertTo<Employee>()).ToList();
 		}
 
 		public async Task AddEmployee(string firstName, string lastName,string location, Dictionary<string, string> unavailability)
@@ -106,6 +97,85 @@ namespace EmployeeScheduleManager
 			}
 
 			return locations;
+		}
+		public async Task CountEmployees(Location lokalizacja)
+		{
+			var pracownicyQuery = _firestoreDb.Collection("Pracownicy")
+				.WhereEqualTo("lokalizacja", lokalizacja.Id);
+
+			var snapshot = await pracownicyQuery.GetSnapshotAsync();
+
+			// Zaktualizuj licznik pracowników
+			lokalizacja.liczbaPracownikow = snapshot.Count;
+
+			// Zaktualizuj bazę danych (dokument lokalizacji)
+			var lokalizacjaDocument = _firestoreDb.Collection("Lokalizacje").Document(lokalizacja.Id);
+			await lokalizacjaDocument.UpdateAsync(new Dictionary<string, object>
+			{
+				{ "liczbaPracownikow", lokalizacja.liczbaPracownikow }
+			});
+		}
+		public async Task CountEmployessAll()
+		{
+			var lokalizacjeQuery = await _firestoreDb.Collection("Lokalizacje").GetSnapshotAsync();
+
+			foreach (var lokalizacjaDoc in lokalizacjeQuery.Documents)
+			{
+				var lokalizacja = lokalizacjaDoc.ConvertTo<Location>();
+				await CountEmployees(lokalizacja);
+			}
+		}
+		public async Task AddLocation(string nazwa, string adres, Dictionary<string, string> openTime, string[] listaStanowisk)
+		{
+			var locationCollection = _firestoreDb.Collection("Lokalizacje");
+
+			// Fetch all employee documents to find the next available ID
+			var allLocations = await locationCollection.ListDocumentsAsync().ToListAsync();
+			int nextId = 1;
+			var existingIds = allLocations.Select(doc => doc.Id).ToList();
+
+			// Find the first available ID in the format 'pracownik_001', 'pracownik_002', etc.
+			while (existingIds.Contains($"lokalizacja_{nextId:D3}"))
+			{
+				nextId++;
+			}
+			string newLocationId = $"lokalizacja_{nextId:D3}";
+
+			// Create the employee data
+			var locationData = new Dictionary<string, object>
+			{
+				{ "nazwa", nazwa },
+				{ "adres", adres },
+				{ "godzinyOtwarcia", openTime },
+				{ "stanowiska", listaStanowisk }
+			};
+
+			// Add the new employee document to Firestore
+			await locationCollection.Document(newLocationId).SetAsync(locationData);
+
+			System.Diagnostics.Debug.WriteLine($"Location {nazwa}  added with ID {newLocationId}");
+		}
+		public async Task DeleteLocationAsync(string locationId)
+		{
+			// Get a reference to the Pracownicy collection
+			var locationRef = _firestoreDb.Collection("Lokalizacje").Document(locationId);
+
+			// Delete the employee document
+			await locationRef.DeleteAsync();
+		}
+		public async Task UpdateLocationAsync(Location location)
+		{
+			var locationRef = _firestoreDb.Collection("Lokalizacje").Document(location.Id);
+
+			var updateData = new Dictionary<string, object>
+			{
+				{ "nazwa", location.nazwa },
+				{ "adres", location.adres },
+				{ "godzinyOtwarcia", location.godzinyOtwarcia },
+				{ "stanowiska", location.stanowiska }
+			};
+
+			await locationRef.UpdateAsync(updateData);
 		}
 	}
 }

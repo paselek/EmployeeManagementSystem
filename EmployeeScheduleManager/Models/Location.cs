@@ -17,11 +17,9 @@ namespace EmployeeScheduleManager.Models
 		[FirestoreProperty]
 		public Dictionary<string, string> godzinyOtwarcia { get; set; } = new Dictionary<string, string>(); // Godziny otwarcia (Map)
 		[FirestoreProperty]
-		public List<string> grafiki { get; set; }= new List<string>(); // Grafiki (Array)
-		[FirestoreProperty]
 		public string nazwa { get; set; } = ""; // Nazwa lokalizacji
 		[FirestoreProperty]
-		public List<string> pracownicy { get; set; } = new List<string>(); // Pracownicy (Array)
+		public int liczbaPracownikow { get; set; } = 0;
 		[FirestoreProperty]
 		public List<string> stanowiska { get; set; } = new List<string>();
 	}

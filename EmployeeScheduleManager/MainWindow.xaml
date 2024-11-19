@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:EmployeeScheduleManager"
         mc:Ignorable="d"
-        Title="MainWindow" Height="460" Width="1000">
+        Title="MainWindow" Height="460" Width="1200">
     <Grid>
         <!-- TabControl to hold tabs -->
         <TabControl>
@@ -57,7 +57,7 @@
                                                 <Run Text="     Sobota: " />
                                                 <Run Text="{Binding niedostepnosc[Sobota]}" />
                                                 <Run Text="     Niedziela: " />
-                                                <Run Text="{Binding niedostepnosc[Niedziela]}" />        
+                                                <Run Text="{Binding niedostepnosc[Niedziela]}" />
                                                 </TextBlock>
                                             </StackPanel>
                                         </DataTemplate>
@@ -67,13 +67,67 @@
                         </DataGrid>
 
                         <!-- Buttons for adding, editing, and removing employees -->
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,10,10">
-                            <Button x:Name="RefreshEmployeeListButton" Content="Odśwież liste" Width="100" Margin="5,5,510,5" Click="RefreshEmployeeList_Click"/>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,10,0">
+                            <Button x:Name="RefreshEmployeeListButton" Content="Odśwież liste" Width="100" Margin="5,5,716,5" Click="RefreshData_Click"/>
                             <Button x:Name="AddEmployeeButton" Content="Dodaj Pracownika" Width="100" Margin="5" Click="AddEmployeeButton_Click"/>
                             <Button x:Name="EditEmployeeButton" Content="Edytuj Pracownika" Width="100" Margin="5" Click="EditEmployeeButton_Click"/>
                             <Button x:Name="DeleteEmployeeButton" Content="Usuń Pracownika" Width="100" Margin="5" Click="DeleteEmployeeButton_Click"/>
                         </StackPanel>
 
+                    </StackPanel>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="Lokalizacje">
+                <Grid >
+                    <StackPanel Margin="10">
+                        <TextBlock Text="Zarządzaj Lokalizacjami" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
+
+                        <!-- DataGrid for displaying locations -->
+                        <DataGrid x:Name="LocationsDataGrid" IsReadOnly="True" AutoGenerateColumns="False" Height="300" SelectionMode="Single">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Id" Width="85" Binding="{Binding Id}"/>
+                                <DataGridTextColumn Header="Nazwa" Binding="{Binding nazwa}" Width="120"/>
+                                <DataGridTemplateColumn Header="Godziny otwarcia" Width="*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel>
+                                                <TextBlock>
+                                                     <Run Text="Poniedziałek: " />
+                                                     <Run Text="{Binding godzinyOtwarcia[poniedzialek]}" />
+                                                     <Run Text="     Wtorek: " />
+                                                     <Run Text="{Binding godzinyOtwarcia[wtorek]}" />
+                                                     <Run Text="     Środa: " />
+                                                     <Run Text="{Binding godzinyOtwarcia[sroda]}" />
+                                                     <Run Text="     Czwartek: " />
+                                                     <Run Text="{Binding godzinyOtwarcia[czwartek]}" />
+                                                </TextBlock>
+                                                <TextBlock>
+                                                     <Run Text="Piątek: " />
+                                                     <Run Text="{Binding godzinyOtwarcia[piatek]}" />
+                                                     <Run Text="     Sobota: " />
+                                                     <Run Text="{Binding godzinyOtwarcia[sobota]}" />
+                                                     <Run Text="     Niedziela: " />
+                                                     <Run Text="{Binding godzinyOtwarcia[niedziela]}" />  
+                                                </TextBlock>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="Adres" Binding="{Binding adres}" Width="200"/>
+                                <DataGridTextColumn Header="Ilość Pracowników" Binding="{Binding liczbaPracownikow}" Width="120"/>
+                                <DataGridTextColumn Header="Stanowiska" Binding="{Binding stanowiska.Count}" Width="80"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <!-- Buttons for actions -->
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,10,0" Grid.Row="1" Grid.Column="1">
+                            <Button x:Name="RefreshLocationsListButton" Content="Odśwież liste" Width="100" Margin="5,5,610,5" Click="RefreshData_Click"/>
+                            <Button Content="Szczegóły Lokalizacji" Margin="5" />
+                            <Button Content="Dodaj Lokalizację" Margin="5" Click="AddLocationButton_Click" />
+                            <Button Content="Edytuj Lokalizację" Margin="5" Click="EditLocationButton_Click" />
+                            <Button Content="Usuń Lokalizację" Margin="5" Click="DeleteLocationButton_Click"/>
+                        </StackPanel>
                     </StackPanel>
                 </Grid>
             </TabItem>
