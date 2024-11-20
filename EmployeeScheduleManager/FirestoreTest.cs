@@ -31,6 +31,14 @@ namespace EmployeeScheduleManager
 			var snapshot = await employeeCollection.GetSnapshotAsync();
 			return snapshot.Documents.Select(doc => doc.ConvertTo<Employee>()).ToList();
 		}
+		public async Task<List<Employee>> GetEmployeesFromLocation(string lokalizacjaId)
+		{
+			// Zapytanie do kolekcji "Pracownicy" z filtrem na pole "lokalizacja"
+			var query = _firestoreDb.Collection("Pracownicy")
+										.WhereEqualTo("lokalizacja", lokalizacjaId);
+			var snapshot = await query.GetSnapshotAsync();
+			return  snapshot.Documents.Select(doc => doc.ConvertTo<Employee>()).ToList();
+		}
 
 		public async Task AddEmployee(string firstName, string lastName,string location, Dictionary<string, string> unavailability)
 		{

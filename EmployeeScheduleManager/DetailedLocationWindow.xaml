@@ -1,0 +1,50 @@
+﻿<Window x:Class="EmployeeScheduleManager.DetailedLocationWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:EmployeeScheduleManager"
+        mc:Ignorable="d"
+        Title="Szczegóły Lokalizacji" Height="500" Width="800">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <!-- Nagłówek -->
+            <RowDefinition Height="*"/>
+            <!-- Godziny otwarcia -->
+            <!-- Listy stanowisk i pracowników -->
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="2*"/>
+            <ColumnDefinition Width="2*"/>
+            <ColumnDefinition Width="3*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Nagłówek -->
+        <StackPanel Grid.Row="0" Grid.ColumnSpan="3" Orientation="Vertical" Margin="0,0,0,10">
+            <TextBlock x:Name="NazwaTextBlock" FontWeight="Bold" FontSize="18" />
+            <TextBlock x:Name="AdresTextBlock" FontSize="14" />
+        </StackPanel>
+
+        <!-- Godziny otwarcia -->
+        <StackPanel Grid.Row="1" Grid.Column="0" Orientation="Vertical" Margin="0,0,0,10">
+            <TextBlock Text="Godziny otwarcia:" FontWeight="Bold" FontSize="16" />
+            <TextBlock x:Name="GodzinyOtwarciaTextBlock" FontSize="14" />
+        </StackPanel>
+
+        <!-- Lista stanowisk -->
+        <GroupBox Header="Stanowiska" Grid.Row="2" Grid.Column="1" Margin="0,0,10,0">
+            <ListBox x:Name="StanowiskaListBox" />
+        </GroupBox>
+
+        <!-- Lista pracowników -->
+        <GroupBox Header="Pracownicy" Grid.Row="2" Grid.Column="2">
+            <DataGrid x:Name="PracownicyDataGrid" AutoGenerateColumns="False" HeadersVisibility="Column" CanUserAddRows="False">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Imię" Binding="{Binding imie}" Width="*"/>
+                    <DataGridTextColumn Header="Nazwisko" Binding="{Binding nazwisko}" Width="*"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </GroupBox>
+    </Grid>
+</Window>

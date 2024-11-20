@@ -147,5 +147,19 @@ namespace EmployeeScheduleManager
 				MessageBox.Show("Proszę wybrać lokalizację do edycji.");
 			}
 		}
+
+		private void DetailLocationButton_Click(object sender, RoutedEventArgs e)
+		{
+			// Sprawdź, czy pracownik jest zaznaczony w DataGrid
+			if (LocationsDataGrid.SelectedItem is Location selectedLocation)
+			{
+				// Utwórz okno edycji i przekaż dane pracownika
+				new DetailedLocationWindow(selectedLocation).ShowDialog();
+			}
+			else
+			{
+				MessageBox.Show("Proszę wybrać lokalizację do wyświetlenia.");
+			}
+		}
 	}
 }
