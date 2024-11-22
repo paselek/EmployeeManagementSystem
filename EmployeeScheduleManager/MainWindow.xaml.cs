@@ -32,7 +32,7 @@ namespace EmployeeScheduleManager
 			var employees = await _firestoreTest.GetEmployeesAsync();
 			var locations = await _firestoreTest.GetLocationsAsync();
 			await _firestoreTest.CountEmployessAll();
-
+			LocationComboBox.ItemsSource = locations;
 			EmployeeListDataGrid.ItemsSource = employees;
 			LocationsDataGrid.ItemsSource = locations;
 		}
@@ -161,5 +161,175 @@ namespace EmployeeScheduleManager
 				MessageBox.Show("Proszę wybrać lokalizację do wyświetlenia.");
 			}
 		}
+
+		private void LocationComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+		{
+			if (LocationComboBox.SelectedItem is Location selectedLocation)
+			{
+				var dniTygodniaMap = new Dictionary<string, string>
+				{
+					{ "sunday", "niedziela" },
+					{ "monday", "poniedzialek" },
+					{ "tuesday", "wtorek" },
+					{ "wednesday", "sroda" },
+					{ "thursday", "czwartek" },
+					{ "friday", "piatek" },
+					{ "saturday", "sobota" }
+				};
+
+				string? selectedDayEnglish = Calendar.SelectedDate?.DayOfWeek.ToString().ToLower(); // Nazwa dnia tygodnia
+
+				if (selectedDayEnglish != null && dniTygodniaMap.TryGetValue(selectedDayEnglish, out string? selectedDay))
+				{
+					string hoursRange = selectedLocation.godzinyOtwarcia[selectedDay];
+
+
+					// Sprawdź, czy lokalizacja jest otwarta w wybrany dzień
+					if (hoursRange == "-")
+					{
+						MessageBox.Show("Wybrana lokalizacja jest zamknięta w tym dniu.");
+						return;
+					}
+					GenerateScheduleGrid(selectedDay, hoursRange, selectedLocation.stanowiska);
+				}
+
+				
+			}
+		}
+
+		private void Calendar_SelectedDatesChanged(object sender, SelectionChangedEventArgs e)
+		{
+			if (LocationComboBox.SelectedItem is Location selectedLocation)
+			{
+				string selectedDay = Calendar.SelectedDate?.DayOfWeek.ToString().ToLower();
+				/*string hoursRange = selectedLocation.GodzinyOtwarcia[selectedDay];
+
+				if (hoursRange == "-")
+				{
+					MessageBox.Show("Wybrana lokalizacja jest zamknięta w tym dniu.");
+					return;
+				}
+
+				GenerateScheduleGrid(selectedDay, hoursRange, selectedLocation.Stanowiska);
+				LoadScheduleFromFirestore(selectedLocation.Id, Calendar.SelectedDate.Value); // Wczytaj zapisany grafik dla dnia*/
+			}
+		}
+
+		private void GenerateScheduleGrid(string day, string hoursRange, List<string> stanowiska)
+		{
+			ScheduleGrid.Children.Clear();
+			ScheduleGrid.RowDefinitions.Clear();
+			ScheduleGrid.ColumnDefinitions.Clear();
+
+			if (hoursRange == "-")
+			{
+				// Wyświetl komunikat, że nie można przypisać grafik na dany dzień
+				MessageBox.Show("Lokalizacja jest zamknięta w wybranym dniu.", "Informacja", MessageBoxButton.OK, MessageBoxImage.Information);
+				return;
+			}
+
+			// Parse godzin otwarcia, np. "08:00-18:00"
+			var hours = hoursRange.Split('-');
+			TimeSpan startTime = TimeSpan.Parse(hours[0]);
+			TimeSpan endTime = TimeSpan.Parse(hours[1]);
+			int totalSlots = (int)(endTime - startTime).TotalMinutes / 30; // 30-minutowe przedziały
+
+			// Dodaj kolumny
+			ScheduleGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(100) }); // Kolumna dla stanowisk
+			for (int i = 0; i < totalSlots; i++)
+			{
+				ScheduleGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(35) });
+			}
+
+			// Dodaj wiersze
+			for (int row = 0; row <= stanowiska.Count; row++)
+			{
+				ScheduleGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+			}
+
+			// Nagłówki czasowe
+			for (int slot = 0; slot <= totalSlots; slot++)
+			{
+				if (slot == 0)
+				{
+					AddTextBlockToGrid("Stanowisko", 0, slot);
+				}
+				else
+				{
+					var time = startTime.Add(TimeSpan.FromMinutes(slot * 30));
+					AddTextBlockToGrid(time.ToString(@"hh\:mm"), 0, slot);
+				}
+			}
+
+			// Stanowiska i przyciski
+			for (int row = 1; row <= stanowiska.Count; row++)
+			{
+				AddTextBlockToGrid(stanowiska[row - 1], row, 0);
+
+				for (int col = 1; col <= totalSlots; col++)
+				{
+					var button = new Button
+					{
+						Content = "",
+						Background = Brushes.LightGray,
+						Tag = new { Row = row, Column = col }
+					};
+					button.Click += (s, e) => OpenShiftDialog((Button)s, startTime, col);
+
+					Grid.SetRow(button, row);
+					Grid.SetColumn(button, col);
+					ScheduleGrid.Children.Add(button);
+				}
+			}
+		}
+
+		private void AddTextBlockToGrid(string text, int row, int col)
+		{
+			var textBlock = new TextBlock
+			{
+				Text = text,
+				VerticalAlignment = VerticalAlignment.Center,
+				HorizontalAlignment = HorizontalAlignment.Center,
+				FontWeight = FontWeights.Bold
+			};
+			Grid.SetRow(textBlock, row);
+			Grid.SetColumn(textBlock, col);
+			ScheduleGrid.Children.Add(textBlock);
+		}
+
+		private async void OpenShiftDialog(Button button, TimeSpan startTime, int column)
+		{
+			// Oblicz początek i koniec przedziału czasowego
+			var start = startTime.Add(TimeSpan.FromMinutes((column - 1) * 30));
+			var end = start.Add(TimeSpan.FromMinutes(30));
+			string? selLoc = null;
+			if (LocationComboBox.SelectedItem is Location selectedLocation)
+			{
+				selLoc = selectedLocation.Id;
+
+				// Stwórz instancję ShiftDialog
+				var dialog = new ShiftDialog();
+				dialog.InitializeData(
+					initialStartTime: start.ToString(@"hh\:mm"),
+					initialEndTime: end.ToString(@"hh\:mm"),
+					availableEmployees: await _firestoreTest.GetEmployeesFromLocation(selLoc)
+				);
+
+
+				// Pokaż dialog i przetwarzaj wynik
+				if (dialog.ShowDialog() == true)
+				{
+					button.Content = $"{dialog.EmployeeName}\n{dialog.StartTime}-{dialog.EndTime}";
+					button.Background = Brushes.LightGreen;
+
+					// Logika zapisu pracownika do lokalnej struktury lub bezpośrednio do bazy
+					//SaveShiftToDatabase(dialog.EmployeeName, dialog.StartTime, dialog.EndTime);
+				}
+			}
+		}
+
+
+
+
 	}
 }

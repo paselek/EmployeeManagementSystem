@@ -12,13 +12,32 @@
             <!-- First Tab: Main Section (e.g., Dashboard) -->
             <TabItem Header="Dashboard">
                 <Grid>
+                    <!-- Define main layout with two columns -->
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="47*"/>
+                        <ColumnDefinition Width="2*"/>
+                        <!-- Left: Location Selector and Calendar -->
                         <ColumnDefinition Width="8*"/>
-                        <ColumnDefinition Width="342*"/>
+                        <!-- Right: Timeline View -->
                     </Grid.ColumnDefinitions>
-                    <!-- Your main dashboard content here -->
-                    <TextBlock Text="Welcome to the Dashboard" HorizontalAlignment="Left" VerticalAlignment="Center" Grid.Column="2" Margin="214,0,0,0"/>
+
+                    <!-- Left Section: Location Selector and Calendar -->
+                    <StackPanel Grid.Column="0" Margin="10">
+                        <!-- Location Selector -->
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,10">
+                            <ComboBox x:Name="LocationComboBox" DisplayMemberPath="nazwa" Width="200" SelectionChanged="LocationComboBox_SelectionChanged"/>
+                        </StackPanel>
+
+                        <!-- Calendar -->
+                        <StackPanel Orientation="Vertical" Margin="0,10,0,0">
+                            <Calendar x:Name="Calendar" SelectedDatesChanged="Calendar_SelectedDatesChanged" />
+                        </StackPanel>
+                        <!-- Przycisk zapisywania grafiku -->
+                        <Button Content="Zapisz dzień" Width="150" Margin="0,15,00,10" HorizontalAlignment="Center" />
+                           <!-- Click="SaveDayButton_Click"-->
+                    </StackPanel>
+
+                    <!-- Siatka timeline (dla stanowisk) -->
+                    <Grid x:Name="ScheduleGrid" Grid.Row="1" Grid.Column="2" Background="White" Margin="10" />
                 </Grid>
             </TabItem>
 
