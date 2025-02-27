@@ -190,7 +190,7 @@ namespace EmployeeScheduleManager
 						MessageBox.Show("Wybrana lokalizacja jest zamknięta w tym dniu.");
 						return;
 					}
-					GenerateScheduleGrid(selectedDay, hoursRange, selectedLocation.stanowiska);
+					//GenerateScheduleGrid(selectedDay, hoursRange, selectedLocation.stanowiska);
 				}
 
 				
@@ -201,87 +201,226 @@ namespace EmployeeScheduleManager
 		{
 			if (LocationComboBox.SelectedItem is Location selectedLocation)
 			{
-				string selectedDay = Calendar.SelectedDate?.DayOfWeek.ToString().ToLower();
-				/*string hoursRange = selectedLocation.GodzinyOtwarcia[selectedDay];
-
-				if (hoursRange == "-")
+				var dniTygodniaMap = new Dictionary<string, string>
 				{
-					MessageBox.Show("Wybrana lokalizacja jest zamknięta w tym dniu.");
-					return;
-				}
+					{ "sunday", "niedziela" },
+					{ "monday", "poniedzialek" },
+					{ "tuesday", "wtorek" },
+					{ "wednesday", "sroda" },
+					{ "thursday", "czwartek" },
+					{ "friday", "piatek" },
+					{ "saturday", "sobota" }
+				};
 
-				GenerateScheduleGrid(selectedDay, hoursRange, selectedLocation.Stanowiska);
-				LoadScheduleFromFirestore(selectedLocation.Id, Calendar.SelectedDate.Value); // Wczytaj zapisany grafik dla dnia*/
-			}
-		}
+				string? selectedDayEnglish = Calendar.SelectedDate?.DayOfWeek.ToString().ToLower(); // Nazwa dnia tygodnia
 
-		private void GenerateScheduleGrid(string day, string hoursRange, List<string> stanowiska)
-		{
-			ScheduleGrid.Children.Clear();
-			ScheduleGrid.RowDefinitions.Clear();
-			ScheduleGrid.ColumnDefinitions.Clear();
-
-			if (hoursRange == "-")
-			{
-				// Wyświetl komunikat, że nie można przypisać grafik na dany dzień
-				MessageBox.Show("Lokalizacja jest zamknięta w wybranym dniu.", "Informacja", MessageBoxButton.OK, MessageBoxImage.Information);
-				return;
-			}
-
-			// Parse godzin otwarcia, np. "08:00-18:00"
-			var hours = hoursRange.Split('-');
-			TimeSpan startTime = TimeSpan.Parse(hours[0]);
-			TimeSpan endTime = TimeSpan.Parse(hours[1]);
-			int totalSlots = (int)(endTime - startTime).TotalMinutes / 30; // 30-minutowe przedziały
-
-			// Dodaj kolumny
-			ScheduleGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(100) }); // Kolumna dla stanowisk
-			for (int i = 0; i < totalSlots; i++)
-			{
-				ScheduleGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(35) });
-			}
-
-			// Dodaj wiersze
-			for (int row = 0; row <= stanowiska.Count; row++)
-			{
-				ScheduleGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-			}
-
-			// Nagłówki czasowe
-			for (int slot = 0; slot <= totalSlots; slot++)
-			{
-				if (slot == 0)
+				if (selectedDayEnglish != null && dniTygodniaMap.TryGetValue(selectedDayEnglish, out string? selectedDay))
 				{
-					AddTextBlockToGrid("Stanowisko", 0, slot);
-				}
-				else
-				{
-					var time = startTime.Add(TimeSpan.FromMinutes(slot * 30));
-					AddTextBlockToGrid(time.ToString(@"hh\:mm"), 0, slot);
-				}
-			}
+					string hoursRange = selectedLocation.godzinyOtwarcia[selectedDay];
 
-			// Stanowiska i przyciski
-			for (int row = 1; row <= stanowiska.Count; row++)
-			{
-				AddTextBlockToGrid(stanowiska[row - 1], row, 0);
 
-				for (int col = 1; col <= totalSlots; col++)
-				{
-					var button = new Button
+					// Sprawdź, czy lokalizacja jest otwarta w wybrany dzień
+					if (hoursRange == "-")
 					{
-						Content = "",
-						Background = Brushes.LightGray,
-						Tag = new { Row = row, Column = col }
-					};
-					button.Click += (s, e) => OpenShiftDialog((Button)s, startTime, col);
+						MessageBox.Show("Wybrana lokalizacja jest zamknięta w tym dniu.");
+						return;
+					}
+					//GenerateScheduleGrid(selectedDay, hoursRange, selectedLocation.stanowiska);
+					//GenerateScheduleGrid( null , selectedLocation.stanowiska,8,20);
+					var dailySchedule = new List<ScheduleEntry>
+						{
+							new ScheduleEntry { EmployeeName = "Kacper Hooless", Position = "Stanowisko 1", StartHour = 8, StartMinute = 0, EndHour = 12, EndMinute = 15 },
+							new ScheduleEntry { EmployeeName = "Anna Nowak", Position = "Stanowisko 2", StartHour = 9, StartMinute = 0, EndHour = 13, EndMinute = 0 },
+							new ScheduleEntry { EmployeeName = "Jan Polański", Position = "Stanowisko 1", StartHour = 12, StartMinute = 15, EndHour = 16, EndMinute = 15 },
+							new ScheduleEntry { EmployeeName = "Mariusz Nowak", Position = "Stanowisko 1", StartHour = 16, StartMinute = 15, EndHour = 18, EndMinute = 0 }
+						};
 
-					Grid.SetRow(button, row);
-					Grid.SetColumn(button, col);
-					ScheduleGrid.Children.Add(button);
+					var positions = new List<string> { "Stanowisko 1", "Stanowisko 2", "Stanowisko 3" };
+					GenerateScheduleInterface(ScheduleGrid, dailySchedule, positions, 8, 18);
 				}
 			}
 		}
+
+
+		private void GenerateScheduleInterface(Grid scheduleGrid, List<ScheduleEntry> dailySchedule, List<string> positions, int startHour, int endHour)
+		{
+			scheduleGrid.Children.Clear();
+			scheduleGrid.RowDefinitions.Clear();
+			scheduleGrid.ColumnDefinitions.Clear();
+
+
+			double cellWidth = 15; // Stała szerokość komórki
+			double cellHeight = 40; // Stała wysokość komórki
+
+			// Dodawanie pierwszej kolumny (nazwy stanowisk)
+			scheduleGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+			// Dodawanie wierszy dla stanowisk
+			foreach (string position in positions)
+			{
+				scheduleGrid.RowDefinitions.Add(new RowDefinition
+				{
+					Height = new GridLength(cellHeight, GridUnitType.Pixel)
+				});
+			}
+
+			// Dodawanie nagłówka godzin (pierwszy wiersz)
+			scheduleGrid.RowDefinitions.Insert(0, new RowDefinition
+			{
+				Height = new GridLength(cellHeight, GridUnitType.Pixel)
+			});
+
+			// Dodawanie kolumn dla 15-minutowych przedziałów
+			for (int hour = startHour; hour < endHour; hour++)
+			{
+				for (int quarter = 0; quarter < 4; quarter++) // 4 kolumny na godzinę (co 15 minut)
+				{
+					scheduleGrid.ColumnDefinitions.Add(new ColumnDefinition
+					{
+						Width = new GridLength(cellWidth, GridUnitType.Pixel)
+					});
+				}
+
+				// Dodawanie nagłówka dla pełnej godziny, obejmującego 4 kolumny
+				TextBlock hourHeader = new TextBlock
+				{
+					Text = $"{hour}:00",
+					FontWeight = FontWeights.Bold,
+					HorizontalAlignment = HorizontalAlignment.Left,
+					VerticalAlignment = VerticalAlignment.Center,
+					Margin = new Thickness(5)
+				};
+
+				// Ustawienie w siatce (pierwszy wiersz, scalone 4 kolumny)
+				Grid.SetRow(hourHeader, 0);
+				Grid.SetColumn(hourHeader, (hour - startHour) * 4 + 1); // +1, aby ominąć kolumnę nazw stanowisk
+				Grid.SetColumnSpan(hourHeader, 4); // 4 kolumny na jedną godzinę
+				scheduleGrid.Children.Add(hourHeader);
+			}
+
+			// Tworzenie nagłówków dla stanowisk (pierwsza kolumna)
+			for (int i = 0; i < positions.Count; i++)
+			{
+				TextBlock positionHeader = new TextBlock
+				{
+					Text = positions[i],
+					FontWeight = FontWeights.Bold,
+					HorizontalAlignment = HorizontalAlignment.Center,
+					VerticalAlignment = VerticalAlignment.Center,
+					Margin = new Thickness(5)
+				};
+				Grid.SetRow(positionHeader, i + 1); // Wiersze zaczynają się od 1, bo nagłówki godzin zajmują wiersz 0
+				Grid.SetColumn(positionHeader, 0); // Pierwsza kolumna dla stanowisk
+				scheduleGrid.Children.Add(positionHeader);
+			}
+
+			// Rysowanie poziomych linii (siatka między stanowiskami)
+			for (int i = 1; i <= positions.Count; i++)
+			{
+				Border horizontalLine = new Border
+				{
+					BorderBrush = Brushes.Gray,
+					BorderThickness = new Thickness(0, 1, 0, 0) // Linia pozioma na górze
+				};
+				Grid.SetRow(horizontalLine, i);
+				Grid.SetColumn(horizontalLine, 0);
+				Grid.SetColumnSpan(horizontalLine, (endHour - startHour + 1) * 4 + 1); // Cała szerokość siatki
+				scheduleGrid.Children.Add(horizontalLine);
+			}
+
+			// Rysowanie pionowych linii co godzinę
+			for (int hour = 0; hour <= (endHour - startHour); hour++)
+			{
+				Border verticalLine = new Border
+				{
+					BorderBrush = Brushes.LightGray,
+					BorderThickness = new Thickness(0, 0, 1, 0) // Linia pionowa z prawej strony komórki
+				};
+				Grid.SetRow(verticalLine, 0);
+				Grid.SetColumn(verticalLine, hour * 4 ); // Kolumny co 4 (pełne godziny)
+				Grid.SetRowSpan(verticalLine, positions.Count+1); // Cała wysokość siatki
+				scheduleGrid.Children.Add(verticalLine);
+			}
+
+			// Rysowanie cienkich pionowych linii co 30 minut (opcjonalnie)
+			for (int halfHour = 0; halfHour < (endHour - startHour) * 4; halfHour += 2)
+			{
+				Border halfHourLine = new Border
+				{
+					BorderBrush = Brushes.LightGray,
+					BorderThickness = new Thickness(0.5, 0, 0, 0) // Cieńsza linia
+				};
+				Grid.SetRow(halfHourLine, 1);
+				Grid.SetColumn(halfHourLine, halfHour + 1); // Kolumny co 2 (pół godziny)
+				Grid.SetRowSpan(halfHourLine, positions.Count); // Cała wysokość siatki
+				scheduleGrid.Children.Add(halfHourLine);
+			}
+
+			// Iteracja przez harmonogram dnia
+			foreach (var scheduleItem in dailySchedule)
+			{
+				// Obliczanie pozycji startowej i długości
+				int startColumn = (scheduleItem.StartHour - startHour) * 4 + (scheduleItem.StartMinute / 15) + 1; // Kolumna początkowa
+				int endColumn = (scheduleItem.EndHour - startHour) * 4 + (scheduleItem.EndMinute / 15) + 1; // Kolumna końcowa
+				int columnSpan = endColumn - startColumn; // Liczba scalanych kolumn
+				int row = positions.IndexOf(scheduleItem.Position) + 1; // Wiersz na podstawie stanowiska (+1 dla przesunięcia o wiersz godzin)
+
+				if (row == 0)
+				{
+					// Wyświetl komunikat, jeśli stanowisko jest nieprawidłowe
+					MessageBox.Show($"Stanowisko '{scheduleItem.Position}' nie istnieje.", "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
+					continue;
+				}
+
+				// Tworzenie elementu ListBoxItem
+				ListBoxItem scheduleItemBox = new ListBoxItem
+				{
+					Content = new StackPanel
+					{
+						Orientation = Orientation.Vertical,
+						Children =
+			{
+				new TextBlock
+				{
+					Text = scheduleItem.EmployeeName,
+					FontWeight = FontWeights.Bold,
+					TextAlignment = TextAlignment.Center
+				},
+				new TextBlock
+				{
+					Text = $"{scheduleItem.StartHour}:{scheduleItem.StartMinute:D2} - {scheduleItem.EndHour}:{scheduleItem.EndMinute:D2}",
+					FontSize = 10,
+					TextAlignment = TextAlignment.Center
+				}
+			}
+					},
+					Background = Brushes.LightBlue,
+					Margin = new Thickness(2),
+					//Tag = scheduleItem // Przechowywanie danych w Tag dla przyszłej edycji
+				};
+
+				/*// Obsługa kliknięcia elementu
+				scheduleItemBox.MouseLeftButtonUp += (s, e) =>
+				{
+					var clickedItem = (ListBoxItem)s;
+					var itemData = (ScheduleItem)clickedItem.Tag;
+					// Wywołanie funkcji edycji
+					EditScheduleItem(itemData);
+				};*/
+
+				// Ustawianie w siatce
+				Grid.SetRow(scheduleItemBox, row);
+				Grid.SetColumn(scheduleItemBox, startColumn);
+				Grid.SetColumnSpan(scheduleItemBox, columnSpan);
+
+				// Dodanie do siatki głównej
+				scheduleGrid.Children.Add(scheduleItemBox);
+			}
+
+		}
+
+
+
 
 		private void AddTextBlockToGrid(string text, int row, int col)
 		{
@@ -297,9 +436,9 @@ namespace EmployeeScheduleManager
 			ScheduleGrid.Children.Add(textBlock);
 		}
 
-		private async void OpenShiftDialog(Button button, TimeSpan startTime, int column)
+		private async void OpenShiftDialog(object sender, RoutedEventArgs e)
 		{
-			// Oblicz początek i koniec przedziału czasowego
+			/*// Oblicz początek i koniec przedziału czasowego
 			var start = startTime.Add(TimeSpan.FromMinutes((column - 1) * 30));
 			var end = start.Add(TimeSpan.FromMinutes(30));
 			string? selLoc = null;
@@ -315,16 +454,18 @@ namespace EmployeeScheduleManager
 					availableEmployees: await _firestoreTest.GetEmployeesFromLocation(selLoc)
 				);
 
-
-				// Pokaż dialog i przetwarzaj wynik
-				if (dialog.ShowDialog() == true)
-				{
-					button.Content = $"{dialog.EmployeeName}\n{dialog.StartTime}-{dialog.EndTime}";
-					button.Background = Brushes.LightGreen;
-
-					// Logika zapisu pracownika do lokalnej struktury lub bezpośrednio do bazy
-					//SaveShiftToDatabase(dialog.EmployeeName, dialog.StartTime, dialog.EndTime);
-				}
+			}*/
+			string? selLoc = null;
+			if (LocationComboBox.SelectedItem is Location selectedLocation)
+			{
+				selLoc = selectedLocation.Id;
+				var dialog = new ShiftDialog();
+				dialog.InitializeData(
+						initialStartTime: "12:15",
+						initialEndTime: "12:30",
+						availableEmployees: await _firestoreTest.GetEmployeesFromLocation(selLoc)
+					);
+				dialog.ShowDialog();
 			}
 		}
 

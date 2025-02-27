@@ -5,7 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:EmployeeScheduleManager"
         mc:Ignorable="d"
-        Title="MainWindow" Height="460" Width="1200">
+        Title="Employee Schedule Manager" Height="460" Width="1200"
+        Icon="icon.ico">
     <Grid>
         <!-- TabControl to hold tabs -->
         <TabControl>
@@ -34,11 +35,14 @@
                         <!-- Przycisk zapisywania grafiku -->
                         <Button Content="Zapisz dzień" Width="150" Margin="0,15,00,10" HorizontalAlignment="Center" />
                            <!-- Click="SaveDayButton_Click"-->
+                        <Button Content="Dodaj zmianę" Width="150" Margin="0,15,00,10" HorizontalAlignment="Center" Click="OpenShiftDialog"/>
+                       
                     </StackPanel>
 
                     <!-- Siatka timeline (dla stanowisk) -->
-                    <Grid x:Name="ScheduleGrid" Grid.Row="1" Grid.Column="2" Background="White" Margin="10" />
+                        <Grid x:Name="ScheduleGrid" Grid.Row="1" Grid.Column="2" Background="White" Margin="10" />
                 </Grid>
+
             </TabItem>
 
             <!-- New Tab: Pracownicy -->

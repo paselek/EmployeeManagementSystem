@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EmployeeScheduleManager.Models
 {
-    class ScheduleEntry
+	/*class ScheduleEntry
     {
 		[FirestoreDocumentId]
 		public string Id { get; set; } = "";
@@ -17,5 +17,14 @@ namespace EmployeeScheduleManager.Models
 		public string End { get; set; } = "";
 		[FirestoreProperty]
 		public string Position { get; set; } = "";
+	}*/
+	public class ScheduleEntry
+	{
+		public string EmployeeName { get; set; }
+		public string Position { get; set; }
+		public int StartHour { get; set; }
+		public int StartMinute { get; set; }
+		public int EndHour { get; set; }
+		public int EndMinute { get; set; }
 	}
 }
