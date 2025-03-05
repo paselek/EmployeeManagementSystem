@@ -102,7 +102,7 @@ namespace EmployeeScheduleManager
 
 		private async void DeleteLocationButton_Click(object sender, RoutedEventArgs e)
 		{
-			// Ensure an employee is selected
+			// Ensure an location is selected
 			if (LocationsDataGrid.SelectedItem is Location selectedLocation)
 			{
 				// Confirm deletion
@@ -113,10 +113,10 @@ namespace EmployeeScheduleManager
 				{
 					try
 					{
-						// Delete the selected employee
+						// Delete the selected location
 						await _firestoreTest.DeleteLocationAsync(selectedLocation.Id);
 
-						// Refresh the employee list
+						// Refresh the data
 						LoadData();
 
 						MessageBox.Show("Lokalizacja usunięta pomyślnie.", "Sukces", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -197,7 +197,7 @@ namespace EmployeeScheduleManager
 			}
 		}
 
-		private void Calendar_SelectedDatesChanged(object sender, SelectionChangedEventArgs e)
+		private async void Calendar_SelectedDatesChanged(object sender, SelectionChangedEventArgs e)
 		{
 			if (LocationComboBox.SelectedItem is Location selectedLocation)
 			{
@@ -223,17 +223,34 @@ namespace EmployeeScheduleManager
 					if (hoursRange == "-")
 					{
 						MessageBox.Show("Wybrana lokalizacja jest zamknięta w tym dniu.");
+						var dailyScheduleL = new List<ScheduleEntry>();
+						if (Calendar.SelectedDate.HasValue)
+						{
+							DateTime selectedDate = Calendar.SelectedDate.Value;
+							dailyScheduleL = await _firestoreTest.GetDailyScheduleWithNamesAsync("lokalizacja_001", selectedDate);
+						}
+						else
+						{
+							// Obsłuż przypadek, gdy data nie została wybrana
+							MessageBox.Show("Proszę wybrać datę.", "Błąd", MessageBoxButton.OK, MessageBoxImage.Warning);
+						}
+
+						var positionsL = new List<string> { "Stanowisko 1", "Stanowisko 2", "Stanowisko 3" };
+						GenerateScheduleInterface(ScheduleGrid, dailyScheduleL, positionsL, 0, 24);
 						return;
 					}
-					//GenerateScheduleGrid(selectedDay, hoursRange, selectedLocation.stanowiska);
-					//GenerateScheduleGrid( null , selectedLocation.stanowiska,8,20);
-					var dailySchedule = new List<ScheduleEntry>
-						{
-							new ScheduleEntry { EmployeeName = "Kacper Hooless", Position = "Stanowisko 1", StartHour = 8, StartMinute = 0, EndHour = 12, EndMinute = 15 },
-							new ScheduleEntry { EmployeeName = "Anna Nowak", Position = "Stanowisko 2", StartHour = 9, StartMinute = 0, EndHour = 13, EndMinute = 0 },
-							new ScheduleEntry { EmployeeName = "Jan Polański", Position = "Stanowisko 1", StartHour = 12, StartMinute = 15, EndHour = 16, EndMinute = 15 },
-							new ScheduleEntry { EmployeeName = "Mariusz Nowak", Position = "Stanowisko 1", StartHour = 16, StartMinute = 15, EndHour = 18, EndMinute = 0 }
-						};
+
+					var dailySchedule = new List<ScheduleEntry>();
+					if (Calendar.SelectedDate.HasValue)
+					{
+						DateTime selectedDate = Calendar.SelectedDate.Value;
+						dailySchedule = await _firestoreTest.GetDailyScheduleWithNamesAsync("lokalizacja_001", selectedDate);
+					}
+					else
+					{
+						// Obsłuż przypadek, gdy data nie została wybrana
+						MessageBox.Show("Proszę wybrać datę.", "Błąd", MessageBoxButton.OK, MessageBoxImage.Warning);
+					}
 
 					var positions = new List<string> { "Stanowisko 1", "Stanowisko 2", "Stanowisko 3" };
 					GenerateScheduleInterface(ScheduleGrid, dailySchedule, positions, 8, 18);

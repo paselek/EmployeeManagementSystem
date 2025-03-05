@@ -24,7 +24,7 @@
 
         <!-- Pracownik -->
         <Label Grid.Row="2" Grid.Column="0" Content="Pracownik:" VerticalAlignment="Center"/>
-        <ComboBox Grid.Row="2" Grid.Column="1" x:Name="EmployeeComboBox" Margin="5" />
+        <ComboBox Grid.Row="2" Grid.Column="1" x:Name="EmployeeComboBox" DisplayMemberPath="FullName" Margin="5" />
 
         <!-- Przyciski -->
         <StackPanel Grid.Row="3" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="5">

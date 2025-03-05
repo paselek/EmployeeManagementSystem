@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace EmployeeScheduleManager.Models
@@ -20,5 +21,7 @@ namespace EmployeeScheduleManager.Models
 		public string lokalizacja { get; set; } = "";
 		[FirestoreProperty]
 		public Dictionary<string, string> niedostepnosc { get; set; } = new Dictionary<string, string>();
+		[JsonIgnore]
+		public string FullName => $"{imie} {nazwisko}";
 	}
 }

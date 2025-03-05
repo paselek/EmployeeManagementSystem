@@ -40,6 +40,23 @@ namespace EmployeeScheduleManager
 			return  snapshot.Documents.Select(doc => doc.ConvertTo<Employee>()).ToList();
 		}
 
+		public async Task<string> GetEmployeeFullNameAsync(string employeeId)
+		{
+			// Pobieramy dokument pracownika z kolekcji "Pracownicy"
+			var docRef = _firestoreDb.Collection("Pracownicy").Document(employeeId);
+			var snapshot = await docRef.GetSnapshotAsync();
+
+			if (snapshot.Exists)
+			{
+				var data = snapshot.ToDictionary();
+				// Zakładamy, że dane pracownika mają pola "imie" i "nazwisko"
+				string imie = data.ContainsKey("imie") ? data["imie"].ToString() : "";
+				string nazwisko = data.ContainsKey("nazwisko") ? data["nazwisko"].ToString() : "";
+				return $"{imie} {nazwisko}";
+			}
+			return employeeId; // Jeśli nie znaleziono dokumentu, zwracamy sam identyfikator
+		}
+
 		public async Task AddEmployee(string firstName, string lastName,string location, Dictionary<string, string> unavailability)
 		{
 			var employeesCollection = _firestoreDb.Collection("Pracownicy");
@@ -184,6 +201,72 @@ namespace EmployeeScheduleManager
 			};
 
 			await locationRef.UpdateAsync(updateData);
+		}
+
+		// Metoda pobierająca "surowy" harmonogram z Firestore dla wybranego dnia
+		public async Task<List<ScheduleEntry>> GetDailyScheduleAsync(string locationId, DateTime selectedDate)
+		{
+			// Przykładowy format dokumentu dla dnia: "2024-04-25"
+			string yearDocId = "Grafik_" + selectedDate.ToString("yyyy");
+			string monthDocId = "Month_" + selectedDate.ToString("MM");
+			string dayDocId = "Day_" + selectedDate.ToString("dd");
+
+			DocumentReference docRef = _firestoreDb
+				.Collection("Lokalizacje")
+				.Document(locationId)
+				.Collection(yearDocId)
+				.Document(monthDocId)
+				.Collection("Days")
+				.Document(dayDocId);
+
+			DocumentSnapshot snapshot = await docRef.GetSnapshotAsync();
+			List<ScheduleEntry> rawSchedule = new List<ScheduleEntry>();
+
+			if (snapshot.Exists)
+			{
+				Dictionary<string, object> data = snapshot.ToDictionary();
+				foreach (var kvp in data)
+				{
+					// Klucz to identyfikator pracownika, np. "pracownik_001"
+					string employeeId = kvp.Key;
+
+					if (kvp.Value is Dictionary<string, object> scheduleData)
+					{
+						int startHour = Convert.ToInt32(scheduleData["startHour"]);
+						int startMinute = Convert.ToInt32(scheduleData["startMinute"]);
+						int endHour = Convert.ToInt32(scheduleData["endHour"]);
+						int endMinute = Convert.ToInt32(scheduleData["endMinute"]);
+						string position = scheduleData["position"].ToString();
+
+						rawSchedule.Add(new ScheduleEntry
+						{
+							EmployeeName = employeeId, // Początkowo identyfikator
+							Position = position,
+							StartHour = startHour,
+							StartMinute = startMinute,
+							EndHour = endHour,
+							EndMinute = endMinute
+						});
+					}
+				}
+			}
+			return rawSchedule;
+		}
+
+		// Metoda uzupełniająca harmonogram o pełne imiona pracowników
+		public async Task<List<ScheduleEntry>> GetDailyScheduleWithNamesAsync(string locationId, DateTime selectedDate)
+		{
+			var rawSchedule = await GetDailyScheduleAsync(locationId, selectedDate);
+			var finalSchedule = new List<ScheduleEntry>();
+
+			foreach (var entry in rawSchedule)
+			{
+				// Metoda GetEmployeeFullNameAsync pobiera pełne imię i nazwisko dla danego identyfikatora
+				string fullName = await GetEmployeeFullNameAsync(entry.EmployeeName);
+				entry.EmployeeName = fullName;
+				finalSchedule.Add(entry);
+			}
+			return finalSchedule;
 		}
 	}
 }
