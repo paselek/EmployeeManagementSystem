@@ -57,6 +57,19 @@ namespace EmployeeScheduleManager
 			return employeeId; // Jeśli nie znaleziono dokumentu, zwracamy sam identyfikator
 		}
 
+		public async Task<List<string>> GetPositionsFromDatabase(string locationId)
+		{
+			DocumentReference docRef = _firestoreDb.Collection("Lokalizacje").Document(locationId);
+			DocumentSnapshot snapshot = await docRef.GetSnapshotAsync();
+
+			if (snapshot.Exists)
+			{
+				List<string> stanowiska = snapshot.GetValue<List<string>>("stanowiska");
+				return stanowiska ?? new List<string>(); // Zwróć pustą listę, jeśli `stanowiska` to `null`
+			}
+			return new List<string>();
+		}
+
 		public async Task AddEmployee(string firstName, string lastName,string location, Dictionary<string, string> unavailability)
 		{
 			var employeesCollection = _firestoreDb.Collection("Pracownicy");

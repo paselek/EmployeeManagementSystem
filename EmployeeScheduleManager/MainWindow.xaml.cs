@@ -166,34 +166,18 @@ namespace EmployeeScheduleManager
 		{
 			if (LocationComboBox.SelectedItem is Location selectedLocation)
 			{
-				var dniTygodniaMap = new Dictionary<string, string>
+				Calendar.IsEnabled = true;
+				if (!Calendar.SelectedDate.HasValue)
 				{
-					{ "sunday", "niedziela" },
-					{ "monday", "poniedzialek" },
-					{ "tuesday", "wtorek" },
-					{ "wednesday", "sroda" },
-					{ "thursday", "czwartek" },
-					{ "friday", "piatek" },
-					{ "saturday", "sobota" }
-				};
-
-				string? selectedDayEnglish = Calendar.SelectedDate?.DayOfWeek.ToString().ToLower(); // Nazwa dnia tygodnia
-
-				if (selectedDayEnglish != null && dniTygodniaMap.TryGetValue(selectedDayEnglish, out string? selectedDay))
-				{
-					string hoursRange = selectedLocation.godzinyOtwarcia[selectedDay];
-
-
-					// Sprawdź, czy lokalizacja jest otwarta w wybrany dzień
-					if (hoursRange == "-")
-					{
-						MessageBox.Show("Wybrana lokalizacja jest zamknięta w tym dniu.");
-						return;
-					}
-					//GenerateScheduleGrid(selectedDay, hoursRange, selectedLocation.stanowiska);
+					Calendar.SelectedDate = DateTime.Today;
 				}
-
-				
+				else
+				{
+					// Jeśli data już jest ustawiona, można ją ponownie przypisać, aby wymusić wywołanie zdarzenia
+					DateTime currentDate = Calendar.SelectedDate.Value;
+					Calendar.SelectedDate = null;
+					Calendar.SelectedDate = currentDate;
+				}
 			}
 		}
 
@@ -227,7 +211,7 @@ namespace EmployeeScheduleManager
 						if (Calendar.SelectedDate.HasValue)
 						{
 							DateTime selectedDate = Calendar.SelectedDate.Value;
-							dailyScheduleL = await _firestoreTest.GetDailyScheduleWithNamesAsync("lokalizacja_001", selectedDate);
+							dailyScheduleL = await _firestoreTest.GetDailyScheduleWithNamesAsync(selectedLocation.Id, selectedDate);
 						}
 						else
 						{
@@ -235,7 +219,7 @@ namespace EmployeeScheduleManager
 							MessageBox.Show("Proszę wybrać datę.", "Błąd", MessageBoxButton.OK, MessageBoxImage.Warning);
 						}
 
-						var positionsL = new List<string> { "Stanowisko 1", "Stanowisko 2", "Stanowisko 3" };
+						List<string> positionsL = await _firestoreTest.GetPositionsFromDatabase(selectedLocation.Id);
 						GenerateScheduleInterface(ScheduleGrid, dailyScheduleL, positionsL, 0, 24);
 						return;
 					}
@@ -244,7 +228,7 @@ namespace EmployeeScheduleManager
 					if (Calendar.SelectedDate.HasValue)
 					{
 						DateTime selectedDate = Calendar.SelectedDate.Value;
-						dailySchedule = await _firestoreTest.GetDailyScheduleWithNamesAsync("lokalizacja_001", selectedDate);
+						dailySchedule = await _firestoreTest.GetDailyScheduleWithNamesAsync(selectedLocation.Id, selectedDate);
 					}
 					else
 					{
@@ -252,7 +236,8 @@ namespace EmployeeScheduleManager
 						MessageBox.Show("Proszę wybrać datę.", "Błąd", MessageBoxButton.OK, MessageBoxImage.Warning);
 					}
 
-					var positions = new List<string> { "Stanowisko 1", "Stanowisko 2", "Stanowisko 3" };
+					//var positions = new List<string> { "Stanowisko 1", "Stanowisko 2", "Stanowisko 3" };
+					List<string> positions = await _firestoreTest.GetPositionsFromDatabase(selectedLocation.Id);
 					GenerateScheduleInterface(ScheduleGrid, dailySchedule, positions, 8, 18);
 				}
 			}
