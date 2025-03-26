@@ -32,11 +32,11 @@
                         <StackPanel Orientation="Vertical" Margin="0,10,0,0">
                             <Calendar x:Name="Calendar" IsEnabled="False" SelectedDatesChanged="Calendar_SelectedDatesChanged" />
                         </StackPanel>
-                        <!-- Przycisk zapisywania grafiku -->
-                        <Button Content="Zapisz dzień" Width="150" Margin="0,15,00,10" HorizontalAlignment="Center" />
-                           <!-- Click="SaveDayButton_Click"-->
-                        <Button Content="Dodaj zmianę" Width="150" Margin="0,15,00,10" HorizontalAlignment="Center" Click="OpenShiftDialog"/>
-                       
+                        <!-- Click="SaveDayButton_Click"-->
+                        <Button x:Name="AddShift" Content="Dodaj zmianę" Width="150" IsEnabled="False" Margin="0,15,00,10" HorizontalAlignment="Center" Click="OpenShiftDialog"/>
+                        <!-- Przycisk usuwania zmian -->
+                        <!--<Button Content="Usuń zmianę" Width="150" Margin="0,15,00,10" HorizontalAlignment="Center" /> -->
+
                     </StackPanel>
 
                     <!-- Siatka timeline (dla stanowisk) -->

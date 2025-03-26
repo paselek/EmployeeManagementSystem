@@ -20,7 +20,9 @@ namespace EmployeeScheduleManager.Models
 	}*/
 	public class ScheduleEntry
 	{
+
 		public string EmployeeName { get; set; }
+		public string EmployeeId { get; set; }
 		public string Position { get; set; }
 		public int StartHour { get; set; }
 		public int StartMinute { get; set; }

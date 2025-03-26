@@ -36,6 +36,7 @@ namespace EmployeeScheduleManager
 			EmployeeListDataGrid.ItemsSource = employees;
 			LocationsDataGrid.ItemsSource = locations;
 		}
+
 		private void AddEmployeeButton_Click(object sender, RoutedEventArgs e)
 		{
 			new AddEmployeeWindow().ShowDialog();
@@ -167,6 +168,7 @@ namespace EmployeeScheduleManager
 			if (LocationComboBox.SelectedItem is Location selectedLocation)
 			{
 				Calendar.IsEnabled = true;
+				AddShift.IsEnabled = true;
 				if (!Calendar.SelectedDate.HasValue)
 				{
 					Calendar.SelectedDate = DateTime.Today;
@@ -197,10 +199,10 @@ namespace EmployeeScheduleManager
 				};
 
 				string? selectedDayEnglish = Calendar.SelectedDate?.DayOfWeek.ToString().ToLower(); // Nazwa dnia tygodnia
-
+				string hoursRange;
 				if (selectedDayEnglish != null && dniTygodniaMap.TryGetValue(selectedDayEnglish, out string? selectedDay))
 				{
-					string hoursRange = selectedLocation.godzinyOtwarcia[selectedDay];
+					hoursRange = selectedLocation.godzinyOtwarcia[selectedDay];
 
 
 					// Sprawdź, czy lokalizacja jest otwarta w wybrany dzień
@@ -238,9 +240,20 @@ namespace EmployeeScheduleManager
 
 					//var positions = new List<string> { "Stanowisko 1", "Stanowisko 2", "Stanowisko 3" };
 					List<string> positions = await _firestoreTest.GetPositionsFromDatabase(selectedLocation.Id);
-					GenerateScheduleInterface(ScheduleGrid, dailySchedule, positions, 8, 18);
+					// Pobierz godziny otwarcia lokalizacji dla wybranego dnia
+					string[] hours = hoursRange.Split('-');
+					string[] open = hours[0].Split(':');
+					string[] close = hours[1].Split(':');
+
+					// Konwersja na liczby całkowite
+					int openHour = int.Parse(open[0]);
+					int openMinute = int.Parse(open[1]);
+					int closeHour = int.Parse(close[0]);
+					int closeMinute = int.Parse(close[1]);
+					GenerateScheduleInterface(ScheduleGrid, dailySchedule, positions, openHour, closeHour);
 				}
 			}
+
 		}
 
 
@@ -339,8 +352,8 @@ namespace EmployeeScheduleManager
 					BorderThickness = new Thickness(0, 0, 1, 0) // Linia pionowa z prawej strony komórki
 				};
 				Grid.SetRow(verticalLine, 0);
-				Grid.SetColumn(verticalLine, hour * 4 ); // Kolumny co 4 (pełne godziny)
-				Grid.SetRowSpan(verticalLine, positions.Count+1); // Cała wysokość siatki
+				Grid.SetColumn(verticalLine, hour * 4); // Kolumny co 4 (pełne godziny)
+				Grid.SetRowSpan(verticalLine, positions.Count + 1); // Cała wysokość siatki
 				scheduleGrid.Children.Add(verticalLine);
 			}
 
@@ -398,17 +411,33 @@ namespace EmployeeScheduleManager
 					},
 					Background = Brushes.LightBlue,
 					Margin = new Thickness(2),
-					//Tag = scheduleItem // Przechowywanie danych w Tag dla przyszłej edycji
+					Tag = scheduleItem // Przechowywanie danych w Tag dla przyszłej edycji
 				};
 
-				/*// Obsługa kliknięcia elementu
-				scheduleItemBox.MouseLeftButtonUp += (s, e) =>
+
+				// Obsługa kliknięcia elementu - usuwanie zmiany
+				scheduleItemBox.MouseRightButtonUp += async (s, e) =>
 				{
 					var clickedItem = (ListBoxItem)s;
-					var itemData = (ScheduleItem)clickedItem.Tag;
-					// Wywołanie funkcji edycji
-					EditScheduleItem(itemData);
-				};*/
+					var itemData = (ScheduleEntry)clickedItem.Tag; // Pobranie danych zmiany
+
+					MessageBoxResult result = MessageBox.Show(
+						$"Czy na pewno chcesz usunąć zmianę dla {itemData.EmployeeName}?",
+						"Potwierdzenie usunięcia",
+						MessageBoxButton.YesNo,
+						MessageBoxImage.Warning);
+
+					if (result == MessageBoxResult.Yes)
+					{
+						var location = LocationComboBox.SelectedItem as Location;
+						DateTime Data = Calendar.SelectedDate ?? DateTime.Now;
+						// Usuń zmianę z Firestore
+						await _firestoreTest.DeleteShiftFromFirestore(location.Id, Data, itemData.EmployeeId);
+
+						// Usuń element z interfejsu
+						scheduleGrid.Children.Remove(clickedItem);
+					}
+				};
 
 				// Ustawianie w siatce
 				Grid.SetRow(scheduleItemBox, row);
@@ -440,39 +469,39 @@ namespace EmployeeScheduleManager
 
 		private async void OpenShiftDialog(object sender, RoutedEventArgs e)
 		{
-			/*// Oblicz początek i koniec przedziału czasowego
-			var start = startTime.Add(TimeSpan.FromMinutes((column - 1) * 30));
-			var end = start.Add(TimeSpan.FromMinutes(30));
-			string? selLoc = null;
 			if (LocationComboBox.SelectedItem is Location selectedLocation)
 			{
-				selLoc = selectedLocation.Id;
+				string locationId = selectedLocation.Id;
+				DateTime selectedDate = Calendar.SelectedDate ?? DateTime.Today;
+				DateTime dayOfWeek = selectedDate;
 
-				// Stwórz instancję ShiftDialog
+				// Pobierz godziny otwarcia lokalizacji dla wybranego dnia
+				string openingHours = await _firestoreTest.GetOpeningHours(locationId, dayOfWeek.ToString("dddd", new System.Globalization.CultureInfo("pl-PL")));
+
+				// Pobierz listę pracowników i ich niedostępność
+				List<Employee> employees = await _firestoreTest.GetEmployeesFromLocation(locationId);
+				Dictionary<string, string> employeeAvailability = await _firestoreTest.GetEmployeeAvailability(locationId, dayOfWeek.ToString("dddd", new System.Globalization.CultureInfo("pl-PL")));
+				var positions = await _firestoreTest.GetPositionsFromDatabase(locationId);
+				// Stworzenie okna dialogowego
 				var dialog = new ShiftDialog();
 				dialog.InitializeData(
-					initialStartTime: start.ToString(@"hh\:mm"),
-					initialEndTime: end.ToString(@"hh\:mm"),
-					availableEmployees: await _firestoreTest.GetEmployeesFromLocation(selLoc)
+					initialStartTime: "12:15",
+					initialEndTime: "12:30",
+					availableEmployees: employees,
+					locationId: locationId,
+					selectedDay: dayOfWeek,
+					openingHours: openingHours,
+					employeeAvailability: employeeAvailability,
+					positions: positions
 				);
 
-			}*/
-			string? selLoc = null;
-			if (LocationComboBox.SelectedItem is Location selectedLocation)
-			{
-				selLoc = selectedLocation.Id;
-				var dialog = new ShiftDialog();
-				dialog.InitializeData(
-						initialStartTime: "12:15",
-						initialEndTime: "12:30",
-						availableEmployees: await _firestoreTest.GetEmployeesFromLocation(selLoc)
-					);
+				// Otwórz okno dialogowe
 				dialog.ShowDialog();
+				// Jeśli data już jest ustawiona, można ją ponownie przypisać, aby wymusić wywołanie zdarzenia
+				DateTime currentDate = Calendar.SelectedDate.Value;
+				Calendar.SelectedDate = null;
+				Calendar.SelectedDate = currentDate;
 			}
 		}
-
-
-
-
 	}
 }

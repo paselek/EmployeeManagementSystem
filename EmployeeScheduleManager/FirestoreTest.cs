@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using FirebaseAdmin;
 using Google.Cloud.Firestore;
 using EmployeeScheduleManager.Models;
+using System.Windows;
 
 namespace EmployeeScheduleManager
 {
@@ -18,8 +19,8 @@ namespace EmployeeScheduleManager
 
 		public async Task DodajDokumentPrzykladowy()
 		{
-			var kolekcja = _firestoreDb.Collection("PrzykladowaKolekcja");
-			var dokument = kolekcja.Document("PrzykladowyDokument");
+			var kolekcja = _firestoreDb.Collection("Test_Polaczenia");
+			var dokument = kolekcja.Document("Test_Dokument");
 
 			await dokument.SetAsync(new { Name = "Test", CreatedAt = Timestamp.GetCurrentTimestamp() });
 			System.Diagnostics.Debug.WriteLine("Dodano dokument do Firestore!");
@@ -275,11 +276,139 @@ namespace EmployeeScheduleManager
 			foreach (var entry in rawSchedule)
 			{
 				// Metoda GetEmployeeFullNameAsync pobiera pełne imię i nazwisko dla danego identyfikatora
+				entry.EmployeeId = entry.EmployeeName;
 				string fullName = await GetEmployeeFullNameAsync(entry.EmployeeName);
 				entry.EmployeeName = fullName;
 				finalSchedule.Add(entry);
 			}
 			return finalSchedule;
 		}
+
+		//Nowe
+		private static readonly Dictionary<string, string> PolishDaysToDb = new()
+		{
+			{ "poniedziałek", "poniedzialek" },
+			{ "wtorek", "wtorek" },
+			{ "środa", "sroda" },
+			{ "czwartek", "czwartek" },
+			{ "piątek", "piatek" },
+			{ "sobota", "sobota" },
+			{ "niedziela", "niedziela" }
+		};
+
+		public async Task<string> GetOpeningHours(string locationId, string dayOfWeek)
+		{
+			if (!PolishDaysToDb.ContainsKey(dayOfWeek))
+				return "-"; // Niepoprawny dzień tygodnia
+
+			string dbDayOfWeek = PolishDaysToDb[dayOfWeek]; // Zamiana na wersję bez polskich znaków
+
+			DocumentReference docRef = _firestoreDb.Collection("Lokalizacje").Document(locationId);
+			DocumentSnapshot snapshot = await docRef.GetSnapshotAsync();
+
+			if (snapshot.Exists && snapshot.ContainsField("godzinyOtwarcia"))
+			{
+				Dictionary<string, object> openingHours = snapshot.GetValue<Dictionary<string, object>>("godzinyOtwarcia");
+				return openingHours.ContainsKey(dbDayOfWeek) ? openingHours[dbDayOfWeek].ToString() : "-";
+			}
+			return "-"; // Jeśli brak danych, traktujemy jako zamknięte
+		}
+
+		public async Task<Dictionary<string, string>> GetEmployeeAvailability(string locationId, string dayOfWeek)
+		{
+			Dictionary<string, string> employeeAvailability = new();
+
+			// Konwersja nazwy dnia na wersję zgodną z bazą danych
+			Dictionary<string, string> dayMapping = new()
+			{
+			{ "poniedziałek", "Poniedzialek" },
+			{ "wtorek", "Wtorek" },
+			{ "środa", "Sroda" },
+			{ "czwartek", "Czwartek" },
+			{ "piątek", "Piatek" },
+			{ "sobota", "Sobota" },
+			{ "niedziela", "Niedziela" }
+			};
+
+			if (!dayMapping.TryGetValue(dayOfWeek, out string? dbDay))
+			{
+				Console.WriteLine($"Nieprawidłowy dzień tygodnia: {dayOfWeek}");
+				return employeeAvailability; // Zwracamy pusty słownik, jeśli dzień nie jest poprawny
+			}
+
+			try
+			{
+				QuerySnapshot employeesSnapshot = await _firestoreDb
+					.Collection("Pracownicy")
+					.WhereEqualTo("lokalizacja", locationId)
+					.GetSnapshotAsync();
+
+				foreach (DocumentSnapshot employeeDoc in employeesSnapshot.Documents)
+				{
+					string employeeId = employeeDoc.Id;
+					string availability = "Brak danych"; // Domyślna wartość
+
+					if (employeeDoc.ContainsField("niedostepnosc"))
+					{
+						Dictionary<string, object> availabilityMap = employeeDoc.GetValue<Dictionary<string, object>>("niedostepnosc");
+
+						if (availabilityMap.ContainsKey(dbDay))
+						{
+							availability = availabilityMap[dbDay].ToString();
+
+							if (availability == "-")
+							{
+								availability = "Dostępny"; // Jeśli "-" → pracownik jest dostępny cały dzień
+							}
+						}
+					}
+
+					employeeAvailability[employeeId] = availability;
+				}
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"Błąd pobierania niedostępności: {ex.Message}");
+			}
+
+			return employeeAvailability;
+		}
+
+		public async Task DeleteShiftFromFirestore(string locationId, DateTime selectedDate, string employeeId)
+		{
+			try
+			{
+				string year = selectedDate.Year.ToString();
+				string month = selectedDate.Month.ToString("D2");
+				string day = selectedDate.Day.ToString("D2");
+				string schedulePath = $"Lokalizacje/{locationId}/Grafik_{year}/Month_{month}/Days";
+				var dayDocRef = _firestoreDb.Collection(schedulePath).Document($"Day_{day}");
+
+				// Pobranie istniejącego dokumentu
+				DocumentSnapshot snapshot = await dayDocRef.GetSnapshotAsync();
+
+				if (snapshot.Exists)
+				{
+					await dayDocRef.UpdateAsync(new Dictionary<string, object>
+					{
+						{ employeeId, FieldValue.Delete }
+					});
+
+					MessageBox.Show("Zmiana została usunięta!", "Sukces", MessageBoxButton.OK, MessageBoxImage.Information);
+				}
+				else
+				{
+					MessageBox.Show("Brak danych do usunięcia.", "Informacja", MessageBoxButton.OK, MessageBoxImage.Information);
+				}
+			}
+			catch (Exception ex)
+			{
+				MessageBox.Show($"Błąd podczas usuwania zmiany: {ex.Message}", "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
+			}
+		}
+
+
+
+
 	}
 }
