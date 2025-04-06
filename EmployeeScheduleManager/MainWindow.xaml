@@ -154,6 +154,41 @@
                     </StackPanel>
                 </Grid>
             </TabItem>
+            <TabItem Header="Podsumowanie">
+                <Grid Margin="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Orientation="Horizontal" Margin="0 0 0 10">
+                        <ComboBox x:Name="LocationSummaryComboBox" DisplayMemberPath="nazwa" Width="150" Margin="0 0 10 0" SelectionChanged="Summary_SelectionChanged"/>
+                        <ComboBox x:Name="YearComboBox" Width="100" Margin="0 0 10 0" SelectionChanged="Summary_SelectionChanged"/>
+                        <ComboBox x:Name="MonthComboBox" Width="100" SelectionChanged="Summary_SelectionChanged"/>
+                    </StackPanel>
+
+                    <TextBlock x:Name="DaysWithShiftsText" Grid.Row="1" FontWeight="Bold" Margin="0 0 0 5"/>
+                    <TextBlock x:Name="TotalHoursText" Grid.Row="1" FontWeight="Bold" Margin="0 0 0 5" HorizontalAlignment="Right"/>
+
+                    <DataGrid x:Name="PositionsSummaryGrid" Grid.Row="2" AutoGenerateColumns="False" Margin="0 10 0 10" IsReadOnly="True">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Stanowisko" Binding="{Binding Position}" Width="*"/>
+                            <DataGridTextColumn Header="Liczba godzin" Binding="{Binding TotalHours}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <DataGrid x:Name="EmployeesSummaryGrid" Grid.Row="3" AutoGenerateColumns="False">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Pracownik" Binding="{Binding EmployeeName}" Width="*"/>
+                            <DataGridTextColumn Header="Godziny pracy" Binding="{Binding TotalHours}" Width="*"/>
+                            <DataGridTextColumn Header="Dni wolne" Binding="{Binding DaysOff}" Width="*"/>
+                            <DataGridTextColumn Header="Dni pracujące" Binding="{Binding DaysWorked}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
 
             <!-- Additional tabs can go here -->
         </TabControl>

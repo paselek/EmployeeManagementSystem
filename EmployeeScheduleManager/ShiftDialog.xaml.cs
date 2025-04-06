@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -57,7 +58,83 @@ namespace EmployeeScheduleManager
 			}
 		}
 
+		private void EndTimeTextBox_PreviewTextInput(object sender, TextCompositionEventArgs e)
+		{
+			// Pozwalamy tylko na cyfry
+			e.Handled = !Regex.IsMatch(e.Text, "^[0-9]$");
+		}
 
+		private void EndTimeTextBox_TextChanged(object sender, TextChangedEventArgs e)
+		{
+			TextBox textBox = sender as TextBox;
+			if (textBox == null) return;
+
+			string text = textBox.Text.Replace(":", ""); // Usuwamy istniejące dwukropki
+			if (text.Length > 4) text = text.Substring(0, 4); // Ograniczamy do 4 znaków
+
+
+			if (text.Length >= 2)
+			{
+				text = text.Insert(2, ":"); // Wstawiamy dwukropek po dwóch cyfrach
+			}
+
+			// Walidacja minut (akceptowane: 00, 15, 30, 45)
+			if (text.Length == 5) // Pełny format xx:xx
+			{
+				string minutes = text.Substring(3, 2);
+				if (minutes != "00" && minutes != "15" && minutes != "30" && minutes != "45")
+				{
+					text = text.Substring(0, 3); // Usunięcie błędnych minut
+				}
+			}
+
+			// Pozycja kursora
+			int cursorPosition = textBox.CaretIndex;
+			if (cursorPosition == 2 ) { cursorPosition++;	}
+		
+
+			textBox.Text = text;
+			textBox.CaretIndex = cursorPosition;
+		}
+
+		private void StartTimeTextBox_PreviewTextInput(object sender, TextCompositionEventArgs e)
+		{
+			// Pozwalamy tylko na cyfry
+			e.Handled = !Regex.IsMatch(e.Text, "^[0-9]$");
+		}
+
+		private void StartTimeTextBox_TextChanged(object sender, TextChangedEventArgs e)
+		{
+			TextBox textBox = sender as TextBox;
+			if (textBox == null) return;
+
+			string text = textBox.Text.Replace(":", ""); // Usuwamy istniejące dwukropki
+			if (text.Length > 4) text = text.Substring(0, 4); // Ograniczamy do 4 znaków
+
+
+			if (text.Length >= 2)
+			{
+				text = text.Insert(2, ":"); // Wstawiamy dwukropek po dwóch cyfrach
+			}
+
+			// Walidacja minut (akceptowane: 00, 15, 30, 45)
+			if (text.Length == 5) // Pełny format xx:xx
+			{
+				string minutes = text.Substring(3, 2);
+				if (minutes != "00" && minutes != "15" && minutes != "30" && minutes != "45")
+				{
+					text = text.Substring(0, 3); // Usunięcie błędnych minut
+				}
+			}
+
+			// Pozycja kursora
+			int cursorPosition = textBox.CaretIndex;
+			if (cursorPosition == 2) { cursorPosition++; }
+
+
+			textBox.Text = text;
+			textBox.CaretIndex = cursorPosition;
+		}
 
 		private async void SaveButton_Click(object sender, RoutedEventArgs e)
 		{
@@ -97,6 +174,14 @@ namespace EmployeeScheduleManager
 						return; // Blokowanie zapisu
 					}
 				}
+			}
+
+		
+			//SPRAWDZ CZY POZYCJA WYBRANA
+			if (PositionComboBox.SelectedItem == null)
+			{
+				MessageBox.Show("Proszę wybrać stanowisko!", "Błąd", MessageBoxButton.OK, MessageBoxImage.Warning);
+				return;
 			}
 
 			if (EmployeeComboBox.SelectedItem is Employee selectedEmployee)

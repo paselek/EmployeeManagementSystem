@@ -16,8 +16,11 @@ namespace EmployeeScheduleManager
 	/// <summary>
 	/// Interaction logic for MainWindow.xaml
 	/// </summary>
+	/// 
+
 	public partial class MainWindow : Window
 	{
+
 		private readonly FirestoreTest _firestoreTest;
 		public MainWindow()
 		{
@@ -25,7 +28,10 @@ namespace EmployeeScheduleManager
 
 			InitializeComponent();
 			LoadData();
+			InitializeSummarySelectors();
 		}
+
+
 
 		private async void LoadData()
 		{
@@ -35,6 +41,7 @@ namespace EmployeeScheduleManager
 			LocationComboBox.ItemsSource = locations;
 			EmployeeListDataGrid.ItemsSource = employees;
 			LocationsDataGrid.ItemsSource = locations;
+			LocationSummaryComboBox.ItemsSource = locations;
 		}
 
 		private void AddEmployeeButton_Click(object sender, RoutedEventArgs e)
@@ -476,7 +483,7 @@ namespace EmployeeScheduleManager
 				DateTime dayOfWeek = selectedDate;
 
 				// Pobierz godziny otwarcia lokalizacji dla wybranego dnia
-				string openingHours = await _firestoreTest.GetOpeningHours(locationId, dayOfWeek.ToString("dddd", new System.Globalization.CultureInfo("pl-PL")));
+				string openingHours = await _firestoreTest.GetOpeningHours(locationId, dayOfWeek.ToString("dddd",new System.Globalization.CultureInfo("pl-PL")));
 
 				// Pobierz listę pracowników i ich niedostępność
 				List<Employee> employees = await _firestoreTest.GetEmployeesFromLocation(locationId);
@@ -503,5 +510,37 @@ namespace EmployeeScheduleManager
 				Calendar.SelectedDate = currentDate;
 			}
 		}
+
+		private async void Summary_SelectionChanged(object sender, SelectionChangedEventArgs e)
+		{
+			if (LocationSummaryComboBox.SelectedItem is Location location &&
+				YearComboBox.SelectedItem is int year &&
+				MonthComboBox.SelectedItem is int month)
+			{
+				var summary = await _firestoreTest.GetMonthlySummaryAsync(location.Id, year, month);
+
+				DaysWithShiftsText.Text = $"Dni z pracownikami: {summary.DaysWithShifts}";
+				TotalHoursText.Text = $"Łączna liczba godzin: {summary.TotalHoursWorked:F2}";
+
+				PositionsSummaryGrid.ItemsSource = summary.PositionSummaries;
+				EmployeesSummaryGrid.ItemsSource = summary.EmployeeSummaries;
+			}
+		}
+
+		private void InitializeSummarySelectors()
+		{
+			// Lata 2025–2030
+			List<int> years = Enumerable.Range(2025, 6).ToList();
+			YearComboBox.ItemsSource = years;
+			YearComboBox.SelectedItem = DateTime.Now.Year;
+
+			// Miesiące 1–12
+			List<int> months = Enumerable.Range(1, 12).ToList();
+			MonthComboBox.ItemsSource = months;
+			MonthComboBox.SelectedItem = DateTime.Now.Month;
+
+			
+		}
+
 	}
 }

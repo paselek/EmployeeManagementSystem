@@ -34,14 +34,16 @@
         
         <!-- Godzina rozpoczęcia -->
         <Label Grid.Row="4" Grid.Column="0" Content="Początek:" FontWeight="Bold" VerticalAlignment="Center"/>
-        <TextBox Grid.Row="4" Grid.Column="1" x:Name="StartTimeTextBox" Margin="5"/>
+        <TextBox Grid.Row="4" Grid.Column="1" x:Name="StartTimeTextBox" Margin="5" PreviewTextInput="StartTimeTextBox_PreviewTextInput"
+         TextChanged="StartTimeTextBox_TextChanged" />
 
         <!-- Godzina zakończenia -->
         <Label Grid.Row="5" Grid.Column="0" Content="Koniec:" FontWeight="Bold" VerticalAlignment="Center"/>
-        <TextBox Grid.Row="5" Grid.Column="1" x:Name="EndTimeTextBox" Margin="5"/>
+        <TextBox Grid.Row="5" Grid.Column="1" x:Name="EndTimeTextBox" Margin="5" PreviewTextInput="EndTimeTextBox_PreviewTextInput"
+         TextChanged="EndTimeTextBox_TextChanged" />
 
         <!-- Pozycja -->
-        <Label Grid.Row="6" Grid.Column="0" Content="Pozycja:"  FontWeight="Bold" VerticalAlignment="Center"/>
+        <Label Grid.Row="6" Grid.Column="0" Content="Stanowisko:"  FontWeight="Bold" VerticalAlignment="Center"/>
         <ComboBox Grid.Row="6" Grid.Column="1" x:Name="PositionComboBox" Margin="5" />
 
         <!-- Przyciski -->

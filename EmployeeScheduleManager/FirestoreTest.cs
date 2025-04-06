@@ -407,6 +407,87 @@ namespace EmployeeScheduleManager
 			}
 		}
 
+		public async Task<MonthlySummary> GetMonthlySummaryAsync(string locationId, int year, int month)
+		{
+			
+
+			string monthPath = $"Lokalizacje/{locationId}/Grafik_{year}/Month_{month:D2}/Days";
+			CollectionReference daysRef = _firestoreDb.Collection(monthPath);
+			QuerySnapshot dayDocs = await daysRef.GetSnapshotAsync();
+
+			var employeeHours = new Dictionary<string, double>();
+			var employeeWorkDays = new Dictionary<string, int>();
+			var positionHours = new Dictionary<string, double>();
+			int daysWithShifts = 0;
+
+			foreach (DocumentSnapshot doc in dayDocs.Documents)
+			{
+				bool anyShiftThisDay = false;
+
+				foreach (var kvp in doc.ToDictionary())
+				{
+					string employeeId = kvp.Key;
+					if (kvp.Value is Dictionary<string, object> shift)
+					{
+						int startHour = Convert.ToInt32(shift["startHour"]);
+						int startMinute = Convert.ToInt32(shift["startMinute"]);
+						int endHour = Convert.ToInt32(shift["endHour"]);
+						int endMinute = Convert.ToInt32(shift["endMinute"]);
+						string position = shift["position"].ToString();
+
+						double hours = (endHour + endMinute / 60.0) - (startHour + startMinute / 60.0);
+						anyShiftThisDay = true;
+
+						// Sumuj dla pracownika
+						if (!employeeHours.ContainsKey(employeeId)) employeeHours[employeeId] = 0;
+						employeeHours[employeeId] += hours;
+
+						if (!employeeWorkDays.ContainsKey(employeeId)) employeeWorkDays[employeeId] = 0;
+						employeeWorkDays[employeeId] += 1;
+
+						// Sumuj dla stanowiska
+						if (!positionHours.ContainsKey(position)) positionHours[position] = 0;
+						positionHours[position] += hours;
+					}
+				}
+
+				if (anyShiftThisDay) daysWithShifts++;
+			}
+
+			// Oblicz liczbę dni w miesiącu
+			int daysInMonth = DateTime.DaysInMonth(year, month);
+
+			// Pobierz dane pracowników
+			var employeesSnapshot = await _firestoreDb.Collection("Pracownicy").GetSnapshotAsync();
+			var employeeNameMap = new Dictionary<string, string>();
+			foreach (var emp in employeesSnapshot.Documents)
+			{
+				string fullName = $"{emp.GetValue<string>("imie")} {emp.GetValue<string>("nazwisko")}";
+				employeeNameMap[emp.Id] = fullName;
+			}
+
+			var employeeSummaries = employeeHours.Select(kvp => new EmployeeSummary
+			{
+				EmployeeName = employeeNameMap.ContainsKey(kvp.Key) ? employeeNameMap[kvp.Key] : kvp.Key,
+				TotalHours = kvp.Value,
+				DaysWorked = employeeWorkDays[kvp.Key],
+				DaysOff = daysInMonth - employeeWorkDays[kvp.Key]
+			}).ToList();
+
+			var positionSummaries = positionHours.Select(kvp => new PositionSummary
+			{
+				Position = kvp.Key,
+				TotalHours = kvp.Value
+			}).ToList();
+
+			return new MonthlySummary
+			{
+				DaysWithShifts = daysWithShifts,
+				TotalHoursWorked = employeeHours.Values.Sum(),
+				EmployeeSummaries = employeeSummaries,
+				PositionSummaries = positionSummaries
+			};
+		}
 
 
 

@@ -23,6 +23,18 @@ namespace EmployeeScheduleManager
 			FirestoreTest firestoreTest = new FirestoreTest();
 			// Wywołanie asynchronicznej metody do dodania dokumentu
 			await firestoreTest.DodajDokumentPrzykladowy();
+
+			var loginWindow = new LoginWindow();
+			bool? result = loginWindow.ShowDialog();
+
+			if (result == true)
+			{
+
+			}
+			else
+			{
+				Application.Current.Shutdown(); // zamknij aplikację jeśli logowanie nie powiodło się
+			}
 		}
 
 
