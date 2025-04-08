@@ -4,6 +4,8 @@ using FirebaseAdmin;
 using Google.Cloud.Firestore;
 using EmployeeScheduleManager.Models;
 using System.Windows;
+using Google.Cloud.Firestore.V1;
+using System.Globalization;
 
 namespace EmployeeScheduleManager
 {
@@ -489,6 +491,113 @@ namespace EmployeeScheduleManager
 			};
 		}
 
+
+		public async Task<DetailedMonthSummary> PobierzSzczegolowePodsumowanieMiesiaca(string lokalizacjaId, int rok, int miesiac)
+		{
+			var wynik = new DetailedMonthSummary
+			{
+				Dni = new List<DaySummary>(),
+				Stanowiska = new HashSet<string>()
+			};
+
+			// Pobierz godziny otwarcia lokalizacji
+			var lokalizacjaDoc = await _firestoreDb.Collection("Lokalizacje").Document(lokalizacjaId).GetSnapshotAsync();
+			var godzinyOtwarcia = lokalizacjaDoc.GetValue<Dictionary<string, string>>("godzinyOtwarcia");
+
+			// Pełna lista dni miesiąca
+			var wszystkieDni = Enumerable.Range(1, DateTime.DaysInMonth(rok, miesiac))
+				.Select(d => new DateTime(rok, miesiac, d))
+				.ToList();
+
+			// Pobierz dane z Firestore
+			var dniCollection = _firestoreDb
+				.Collection("Lokalizacje")
+				.Document(lokalizacjaId)
+				.Collection($"Grafik_{rok}")
+				.Document($"Month_{miesiac:D2}")
+				.Collection("Days");
+
+			var dniDocs = await dniCollection.GetSnapshotAsync();
+			var mapaFirestore = dniDocs.ToDictionary(doc => doc.Id, doc => doc);
+
+			foreach (var data in wszystkieDni)
+			{
+				string dzienStr = data.ToString("yyyy-MM-dd");
+				string dayId = $"Day_{data.Day:D2}";
+
+				double lacznaLiczbaGodzin = 0;
+				int liczbaPracownikow = 0;
+				var godzinyNaStanowiskach = new Dictionary<string, double>();
+				var wszystkieZmiany = new List<(TimeSpan start, TimeSpan end)>();
+
+				if (mapaFirestore.TryGetValue(dayId, out var dokumentDnia))
+				{
+					var daneDnia = dokumentDnia.ToDictionary();
+					liczbaPracownikow = daneDnia.Count;
+
+					foreach (var wpis in daneDnia)
+					{
+						if (wpis.Value is Dictionary<string, object> dane)
+						{
+							int startHour = Convert.ToInt32(dane["startHour"]);
+							int startMinute = Convert.ToInt32(dane["startMinute"]);
+							int endHour = Convert.ToInt32(dane["endHour"]);
+							int endMinute = Convert.ToInt32(dane["endMinute"]);
+							string position = dane["position"].ToString();
+
+							var start = new TimeSpan(startHour, startMinute, 0);
+							var end = new TimeSpan(endHour, endMinute, 0);
+							double godziny = (end - start).TotalHours;
+
+							lacznaLiczbaGodzin += godziny;
+							if (!godzinyNaStanowiskach.ContainsKey(position))
+								godzinyNaStanowiskach[position] = 0;
+							godzinyNaStanowiskach[position] += godziny;
+
+							wszystkieZmiany.Add((start, end));
+							wynik.Stanowiska.Add(position);
+						}
+					}
+				}
+
+
+
+				// Sprawdzenie pokrycia godzin otwarcia
+				bool pokrycie = false;
+				var dzienTygodnia = data.ToString("dddd", new CultureInfo("pl-PL")).ToLower();
+				if (PolishDaysToDb.TryGetValue(dzienTygodnia, out var dbKey) && godzinyOtwarcia.TryGetValue(dbKey, out var godzinyStr) && godzinyStr != "-")
+				{
+					var godzinySplit = godzinyStr.Split('-');
+					if (TimeSpan.TryParse(godzinySplit[0], out var otwarcie) &&
+						TimeSpan.TryParse(godzinySplit[1], out var zamkniecie))
+					{
+						pokrycie = CzyPokrytePrzedzialemCzasowym(otwarcie, zamkniecie, wszystkieZmiany);
+					}
+				}
+
+				wynik.Dni.Add(new DaySummary
+				{
+					Dzien = dzienStr,
+					LacznaLiczbaGodzin = Math.Round(lacznaLiczbaGodzin, 2),
+					LiczbaPracownikow = liczbaPracownikow,
+					PokrycieOdOtwarciaDoZamkniecia = pokrycie,
+					GodzinyNaStanowiskach = godzinyNaStanowiskach
+				});
+			}
+
+			return wynik;
+		}
+
+
+		private bool CzyPokrytePrzedzialemCzasowym(TimeSpan otwarcie, TimeSpan zamkniecie, List<(TimeSpan start, TimeSpan end)> zmiany)
+		{
+			for (var czas = otwarcie; czas < zamkniecie; czas += TimeSpan.FromMinutes(15))
+			{
+				bool pokryty = zmiany.Any(z => z.start <= czas && z.end > czas);
+				if (!pokryty) return false;
+			}
+			return true;
+		}
 
 
 	}

@@ -542,5 +542,18 @@ namespace EmployeeScheduleManager
 			
 		}
 
+		private async void SzczegolyMiesiaca_Click(object sender, RoutedEventArgs e)
+		{
+			var selectedLocationFull = LocationSummaryComboBox.SelectedItem as Location;
+			var selectedYear = (int)YearComboBox.SelectedItem;
+			var selectedMonth = (int)MonthComboBox.SelectedItem;
+			var selectedLocation = selectedLocationFull.Id;
+			var szczegoly = await _firestoreTest.PobierzSzczegolowePodsumowanieMiesiaca(selectedLocation, selectedYear, selectedMonth);
+
+			var okno = new MonthDetailedSummaryWindow(szczegoly.Dni, szczegoly.Stanowiska);
+			okno.ShowDialog();
+		}
+
+
 	}
 }

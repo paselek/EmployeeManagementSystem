@@ -54,15 +54,19 @@ namespace EmployeeScheduleManager
 
 		private async Task<bool> AuthenticateUser(string username, string password)
 		{
-			CollectionReference adminsRef = _firestoreDb.Collection("Admins");
+			CollectionReference adminsRef = _firestoreDb.Collection("Logins");
 			QuerySnapshot snapshot = await adminsRef.WhereEqualTo("username", username).GetSnapshotAsync();
 
 			if (!snapshot.Any()) return false;
 
 			var doc = snapshot.First();
 			string storedHash = doc.GetValue<string>("passwordHash");
+			string role = doc.GetValue<string>("role");
 
-			return BCrypt.Net.BCrypt.Verify(password, storedHash);
+			if (role == "admin")
+				return BCrypt.Net.BCrypt.Verify(password, storedHash);
+			else
+				return false;
 		}
 	}
 }
