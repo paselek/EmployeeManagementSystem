@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:EmployeeScheduleManager"
         mc:Ignorable="d"
-        Title="AddLocationWindow" Height="450" Width="350">
+        Title="Dodaj Lokalizacje" Height="450" Width="350">
     <Grid Margin="10,10,10,10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -88,7 +88,7 @@
 
             <TextBlock Grid.Row="5" Text="Stanowiska:"  VerticalAlignment="Center"/>
             <TextBox x:Name="StanowiskaTextBox" Grid.Row="5" Margin="100,5,0,5" Width="200"/>
-        <TextBlock Grid.Row="6" Text="Stanowiska w formacie: Kasjer,Kasjer2,Magazynier"  VerticalAlignment="Top"/>
+        <TextBlock Grid.Row="6" Text="Stanowiska w formacie: Kasjer,Sprzątacz,Magazynier..."  VerticalAlignment="Top"/>
         <!-- Buttons -->
         <StackPanel Grid.Row="6" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20,0,0">
             <Button x:Name="SaveButton" Content="Dodaj" Width="80" Margin="5"  Height="20" Click="SaveButton_Click"/>

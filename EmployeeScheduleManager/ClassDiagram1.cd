@@ -1,0 +1,60 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="EmployeeScheduleManager.Models.DaySummary">
+    <Position X="16.75" Y="2.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>IAAgAIAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAABAAAA=</HashCode>
+      <FileName>Models\DaySummary.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="EmployeeScheduleManager.Models.DetailedMonthSummary">
+    <Position X="13.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAEAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Models\DaySummary.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="EmployeeScheduleManager.Models.Employee">
+    <Position X="15" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACAAAAAAAAAICAAAAAAAAAACAAAAAAAAAAAACAQAA=</HashCode>
+      <FileName>Models\Employee.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="EmployeeScheduleManager.Models.Location">
+    <Position X="13.25" Y="2.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACAAAAAAAEAAAAAIAAAAAAAAAAAAAIAAAAAAACIAA=</HashCode>
+      <FileName>Models\Location.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="EmployeeScheduleManager.Models.MonthlySummary">
+    <Position X="16.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAYAAAAgAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAA=</HashCode>
+      <FileName>Models\MonthlySummary.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="EmployeeScheduleManager.Models.PositionSummary">
+    <Position X="11.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAACAAgAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Models\MonthlySummary.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="EmployeeScheduleManager.Models.EmployeeSummary">
+    <Position X="11.5" Y="2.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAIAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAgABAAAAA=</HashCode>
+      <FileName>Models\MonthlySummary.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="EmployeeScheduleManager.Models.ScheduleEntry">
+    <Position X="15" Y="2.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAIAAAAAAAAAAQgAAAAAAAAAAAAAAAMAAAAAAACAIA=</HashCode>
+      <FileName>Models\ScheduleEntry.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

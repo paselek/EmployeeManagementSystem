@@ -167,7 +167,7 @@
                         <ComboBox x:Name="LocationSummaryComboBox" DisplayMemberPath="nazwa" Width="150" Margin="0 0 10 0" SelectionChanged="Summary_SelectionChanged"/>
                         <ComboBox x:Name="YearComboBox" Width="100" Margin="0 0 10 0" SelectionChanged="Summary_SelectionChanged"/>
                         <ComboBox x:Name="MonthComboBox" Width="100" SelectionChanged="Summary_SelectionChanged"/>
-                        <Button Content="Szczegóły miesiąca" Click="SzczegolyMiesiaca_Click" Margin="100 0 0 0"/>
+                        <Button Content="Widok dzienny" Click="SzczegolyMiesiaca_Click" Margin="700 0 0 0"/>
                     </StackPanel>
 
                     <TextBlock x:Name="DaysWithShiftsText" Grid.Row="1" FontWeight="Bold" Margin="0 0 0 5"/>

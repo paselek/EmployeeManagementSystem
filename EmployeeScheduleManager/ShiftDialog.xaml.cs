@@ -247,12 +247,8 @@ namespace EmployeeScheduleManager
 
 		private bool IsOverlappingWithAvailability(string startTime, string endTime, string availability)
 		{
-			if (string.IsNullOrWhiteSpace(availability))
-				return false;
-
 			TimeSpan shiftStart = TimeSpan.Parse(startTime);
 			TimeSpan shiftEnd = TimeSpan.Parse(endTime);
-
 			string[] unavailablePeriods = availability.Split(',');
 
 			foreach (var period in unavailablePeriods)

@@ -31,7 +31,7 @@ namespace EmployeeScheduleManager
 			InitializeSummarySelectors();
 		}
 
-
+	
 
 		private async void LoadData()
 		{

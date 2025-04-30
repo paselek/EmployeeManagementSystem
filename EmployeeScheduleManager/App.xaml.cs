@@ -25,11 +25,14 @@ namespace EmployeeScheduleManager
 			await firestoreTest.DodajDokumentPrzykladowy();
 
 			var loginWindow = new LoginWindow();
+			Current.MainWindow = loginWindow;
 			bool? result = loginWindow.ShowDialog();
 
 			if (result == true)
 			{
-
+				MainWindow mainWindow = new MainWindow();
+				Current.MainWindow = mainWindow;
+				mainWindow.Show();
 			}
 			else
 			{

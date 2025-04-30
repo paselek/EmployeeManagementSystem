@@ -77,19 +77,18 @@ namespace EmployeeScheduleManager
 		{
 			var employeesCollection = _firestoreDb.Collection("Pracownicy");
 
-			// Fetch all employee documents to find the next available ID
+			// Znajdz dostepny id
 			var allEmployees = await employeesCollection.ListDocumentsAsync().ToListAsync();
 			int nextId = 1;
 			var existingIds = allEmployees.Select(doc => doc.Id).ToList();
 
-			// Find the first available ID in the format 'pracownik_001', 'pracownik_002', etc.
 			while (existingIds.Contains($"pracownik_{nextId:D3}"))
 			{
 				nextId++;
 			}
 			string newEmployeeId = $"pracownik_{nextId:D3}";
 
-			// Create the employee data
+			// Tworzymy model pracownika
 			var employeeData = new Dictionary<string, object>
 			{
 				{ "imie", firstName },
@@ -98,17 +97,17 @@ namespace EmployeeScheduleManager
 				{ "niedostepnosc", unavailability }
 			};
 
-			// Add the new employee document to Firestore
+			// dodajemy dokument do bazy danych
 			await employeesCollection.Document(newEmployeeId).SetAsync(employeeData);
 
-			System.Diagnostics.Debug.WriteLine($"Employee {firstName} {lastName} added with ID {newEmployeeId}");
+			System.Diagnostics.Debug.WriteLine($"Pracownik {firstName} {lastName} dodany z ID {newEmployeeId}");
 		}
 		public async Task DeleteEmployeeAsync(string employeeId)
 		{
-			// Get a reference to the Pracownicy collection
+			// Referencja do kolekcji pracownicy
 			var employeeRef = _firestoreDb.Collection("Pracownicy").Document(employeeId);
 
-			// Delete the employee document
+			// Usuwanie danych pracownika
 			await employeeRef.DeleteAsync();
 		}
 		public async Task UpdateEmployeeAsync(Employee employee)
